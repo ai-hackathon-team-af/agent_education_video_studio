@@ -1,74 +1,54 @@
-"""LLMファクトリーモジュール"""
+"""LLMファクトリーモジュール - Google Gemini API対応"""
 
 import os
 from typing import Dict, Any, Optional
-from botocore.config import Config
-from langchain_aws import ChatBedrock
+from langchain_google_genai import ChatGoogleGenerativeAI
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-def create_bedrock_llm(
+def create_gemini_llm(
     model_id: str,
     temperature: float = 0.7,
     max_tokens: int = 8192,
-    region_name: Optional[str] = None,
     request_timeout: int = 600,
-) -> ChatBedrock:
-    """AWS Bedrock LLMインスタンスを生成する
+) -> ChatGoogleGenerativeAI:
+    """Google Gemini LLMインスタンスを生成する
 
     Args:
-        model_id: BedrockモデルID
+        model_id: GeminiモデルID (例: gemini-2.0-flash)
         temperature: 温度パラメータ (0.0 ~ 1.0)
         max_tokens: 最大トークン数
-        region_name: AWSリージョン名（Noneの場合は環境変数から取得）
         request_timeout: リクエストタイムアウト（秒）
 
     Returns:
-        ChatBedrock: LLMインスタンス
+        ChatGoogleGenerativeAI: LLMインスタンス
 
     Raises:
-        ValueError: AWS認証情報またはリージョンが設定されていない場合
+        ValueError: Google API Keyが設定されていない場合
     """
-    # AWS認証情報の確認
-    aws_access_key = os.getenv("AWS_ACCESS_KEY_ID")
-    aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    # Google API Keyの確認
+    api_key = os.getenv("GOOGLE_API_KEY")
 
-    if not aws_access_key or not aws_secret_key:
+    if not api_key:
         raise ValueError(
-            "AWS認証情報が設定されていません。\n"
-            "AWS_ACCESS_KEY_ID と AWS_SECRET_ACCESS_KEY を .env ファイルに設定してください。"
+            "Google API Keyが設定されていません。\n"
+            "GOOGLE_API_KEY を .env ファイルに設定してください。"
         )
 
-    # リージョンの取得
-    if region_name is None:
-        region_name = os.getenv("AWS_DEFAULT_REGION")
-
-    if not region_name:
-        raise ValueError(
-            "AWSリージョンが設定されていません。\n"
-            "AWS_DEFAULT_REGION を .env ファイルに設定してください（例: us-east-1）"
-        )
-
-    # boto3 Configを使用してタイムアウトを設定
-    config = Config(
-        read_timeout=request_timeout,
-        connect_timeout=10,
-        retries={"max_attempts": 3, "mode": "standard"},
-    )
-
-    return ChatBedrock(
-        model_id=model_id,
-        model_kwargs={"temperature": temperature, "max_tokens": max_tokens},
-        region_name=region_name,
-        config=config,
+    return ChatGoogleGenerativeAI(
+        model=model_id,
+        temperature=temperature,
+        max_output_tokens=max_tokens,
+        timeout=request_timeout,
+        google_api_key=api_key,
     )
 
 
 def create_llm_from_model_config(
     model_config: Dict[str, Any], temperature: Optional[float] = None
-) -> ChatBedrock:
+) -> ChatGoogleGenerativeAI:
     """モデル設定からLLMインスタンスを生成する
 
     Args:
@@ -76,16 +56,16 @@ def create_llm_from_model_config(
         temperature: 温度パラメータ（Noneの場合はmodel_configのdefault_temperatureを使用）
 
     Returns:
-        ChatBedrock: LLMインスタンス
+        ChatGoogleGenerativeAI: LLMインスタンス
 
     Raises:
         ValueError: サポートされていないプロバイダーの場合
     """
-    provider = model_config.get("provider", "bedrock")
+    provider = model_config.get("provider", "google")
 
-    if provider != "bedrock":
+    if provider not in ["google", "gemini"]:
         raise ValueError(
-            f"サポートされていないプロバイダー: {provider}. Bedrockのみサポートしています。"
+            f"サポートされていないプロバイダー: {provider}. Google Geminiのみサポートしています。"
         )
 
     model_id = model_config["id"]
@@ -94,7 +74,6 @@ def create_llm_from_model_config(
     if temperature is None:
         temperature = model_config.get("default_temperature", 0.7)
 
-    return create_bedrock_llm(
+    return create_gemini_llm(
         model_id=model_id, temperature=temperature, max_tokens=max_tokens
     )
-

@@ -1,31 +1,40 @@
-"""AI models configuration"""
+"""AI models configuration - Google Gemini API"""
 
 from typing import List, Dict, Any
 
 # 利用可能なAIモデルの設定
 AVAILABLE_MODELS: List[Dict[str, Any]] = [
     {
-        "id": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-        "name": "Claude Sonnet 4.5",
-        "provider": "bedrock",
-        "temperature_range": (0.0, 1.0),
+        "id": "gemini-2.0-flash",
+        "name": "Gemini 2.0 Flash",
+        "provider": "google",
+        "temperature_range": (0.0, 2.0),
         "default_temperature": 1.0,
-        "max_tokens": 64000,
+        "max_tokens": 8192,
         "recommended": True,
     },
     {
-        "id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-        "name": "Claude Haiku 4.5",
-        "provider": "bedrock",
-        "temperature_range": (0.0, 1.0),
+        "id": "gemini-1.5-pro",
+        "name": "Gemini 1.5 Pro",
+        "provider": "google",
+        "temperature_range": (0.0, 2.0),
         "default_temperature": 1.0,
-        "max_tokens": 64000,
+        "max_tokens": 8192,
+        "recommended": False,
+    },
+    {
+        "id": "gemini-1.5-flash",
+        "name": "Gemini 1.5 Flash",
+        "provider": "google",
+        "temperature_range": (0.0, 2.0),
+        "default_temperature": 1.0,
+        "max_tokens": 8192,
         "recommended": False,
     },
 ]
 
 # デフォルトモデル設定
-DEFAULT_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+DEFAULT_MODEL_ID = "gemini-2.0-flash"
 
 
 # モデル設定を取得する関数
