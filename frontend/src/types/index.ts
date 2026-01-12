@@ -275,3 +275,16 @@ export interface JsonFileInfo {
 export interface JsonFileStatusUpdate {
   is_generated: boolean;
 }
+
+// === 旧API型定義（後方互換性） ===
+export interface SectionRequest {
+  outline: StoryOutline;
+  model?: string;
+  temperature?: number;
+}
+
+export interface FoodOverconsumptionScript {
+  title: string;
+  food_name: string;
+  sections: VideoSection[];
+}
