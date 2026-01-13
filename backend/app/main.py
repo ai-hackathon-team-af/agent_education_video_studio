@@ -60,9 +60,11 @@ else:
     logger.warning(f"Assets directory not found: {assets_dir}")
 # Import and include routers
 from app.api import videos, scripts, voices, management, websocket
+from app.api.upload import router as upload_router
 
 app.include_router(videos.router, prefix="/api/videos", tags=["videos"])
 app.include_router(scripts.router, prefix="/api/scripts", tags=["scripts"])
 app.include_router(voices.router, prefix="/api/voices", tags=["voices"])
 app.include_router(management.router, prefix="/api/management", tags=["management"])
 app.include_router(websocket.router, prefix="/ws", tags=["websocket"])
+app.include_router(upload_router, prefix="/api", tags=["upload"])

@@ -1,4 +1,5 @@
-import { Upload, ChevronRight } from "lucide-react";
+import { useRef, useCallback } from "react";
+import { Upload, ChevronRight, FileText, Loader2, AlertCircle } from "lucide-react";
 import { useWizardStore } from "@/stores/wizardStore";
 import type { Grade, Subject } from "@/types/wizard";
 
@@ -6,16 +7,56 @@ const GRADES: Grade[] = ["中学3年生", "中学2年生", "中学1年生", "高
 const SUBJECTS: Subject[] = ["理科", "数学", "国語", "英語"];
 
 const InputScreen = () => {
-  const { fileName, grade, subject, setFileName, setGrade, setSubject, setStep } =
-    useWizardStore();
+  const {
+    fileName,
+    fileContent,
+    grade,
+    subject,
+    isProcessing,
+    error,
+    setGrade,
+    setSubject,
+    uploadFile,
+    generateScript,
+    setStep,
+  } = useWizardStore();
 
-  const handleFileClick = () => {
-    // デモ用：クリックでファイル名を設定
-    setFileName("中3物理_第2章_慣性の法則.pdf");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = useCallback(
+    async (file: File) => {
+      await uploadFile(file);
+    },
+    [uploadFile]
+  );
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileSelect(file);
+    }
   };
 
-  const startGeneration = () => {
-    if (!fileName) return;
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleFileSelect(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const startGeneration = async () => {
+    if (!fileContent) return;
+    // 台本生成を開始してステップ2へ
+    await generateScript();
     setStep(2);
   };
 
@@ -28,21 +69,75 @@ const InputScreen = () => {
         プリントを置くだけで、生徒の「わからない」を解決する動画を作ります。
       </p>
 
+      {/* エラー表示 */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-left">
+          <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
+          <p className="text-red-700 text-sm">{error}</p>
+        </div>
+      )}
+
       {/* ファイルアップロードエリア */}
       <div
-        className="bg-white p-8 rounded-3xl border-2 border-dashed border-blue-200 hover:border-blue-400 transition-colors cursor-pointer group mb-8"
-        onClick={handleFileClick}
+        className={`bg-white p-8 rounded-3xl border-2 border-dashed transition-colors cursor-pointer group mb-8 ${
+          isProcessing
+            ? "border-blue-300 bg-blue-50"
+            : fileName
+            ? "border-green-300 bg-green-50"
+            : "border-blue-200 hover:border-blue-400"
+        }`}
+        onClick={!isProcessing ? handleClick : undefined}
+        onDrop={!isProcessing ? handleDrop : undefined}
+        onDragOver={handleDragOver}
       >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.docx"
+          onChange={handleFileInputChange}
+          className="hidden"
+        />
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors">
-            <Upload className="text-blue-500" size={32} />
+          <div
+            className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors ${
+              isProcessing
+                ? "bg-blue-100"
+                : fileName
+                ? "bg-green-100"
+                : "bg-blue-50 group-hover:bg-blue-100"
+            }`}
+          >
+            {isProcessing ? (
+              <Loader2 className="text-blue-500 animate-spin" size={32} />
+            ) : fileName ? (
+              <FileText className="text-green-500" size={32} />
+            ) : (
+              <Upload className="text-blue-500" size={32} />
+            )}
           </div>
           <p className="text-lg font-medium text-slate-700">
-            {fileName || "ファイルをドラッグ＆ドロップ、またはクリックして選択"}
+            {isProcessing
+              ? "ファイルを処理中..."
+              : fileName || "ファイルをドラッグ＆ドロップ、またはクリックして選択"}
           </p>
-          <p className="text-sm text-slate-400 mt-2">PDF, Word (最大 20MB)</p>
+          <p className="text-sm text-slate-400 mt-2">PDF, Word (.docx) 対応</p>
         </div>
       </div>
+
+      {/* ファイル内容プレビュー */}
+      {fileContent && (
+        <div className="mb-8 text-left">
+          <label className="block text-sm font-semibold text-slate-600 mb-2">
+            抽出されたテキスト（プレビュー）
+          </label>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 max-h-40 overflow-y-auto">
+            <p className="text-sm text-slate-600 whitespace-pre-wrap">
+              {fileContent.slice(0, 500)}
+              {fileContent.length > 500 && "..."}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* 学年・教科選択 */}
       <div className="flex gap-4 mb-10">
@@ -83,14 +178,23 @@ const InputScreen = () => {
       {/* 生成開始ボタン */}
       <button
         onClick={startGeneration}
-        disabled={!fileName}
+        disabled={!fileContent || isProcessing}
         className={`w-full py-4 rounded-2xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${
-          fileName
+          fileContent && !isProcessing
             ? "bg-blue-600 hover:bg-blue-700 active:scale-95"
             : "bg-slate-300 cursor-not-allowed"
         }`}
       >
-        動画生成をスタート <ChevronRight size={20} />
+        {isProcessing ? (
+          <>
+            <Loader2 className="animate-spin" size={20} />
+            処理中...
+          </>
+        ) : (
+          <>
+            台本を生成する <ChevronRight size={20} />
+          </>
+        )}
       </button>
     </div>
   );

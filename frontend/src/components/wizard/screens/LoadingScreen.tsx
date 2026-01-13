@@ -1,68 +1,17 @@
-import { useEffect, useRef } from "react";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, AlertCircle } from "lucide-react";
 import { useWizardStore } from "@/stores/wizardStore";
-
-// シミュレーション用のログメッセージ
-const LOADING_MESSAGES = [
-  "テキスト構造を解析中...",
-  "つまずきポイントを特定: '慣性の法則'...",
-  "専門用語の平易化処理を開始...",
-  "図解用の構成案を作成中...",
-  "AIナレーション音声を合成中 (Voice: Gentle Teacher)...",
-  "スライド映像をレンダリング中...",
-  "最終チェックを実行中...",
-];
 
 const LoadingScreen = () => {
   const {
     loadingLogs,
     progress,
-    addLoadingLog,
-    setProgress,
-    clearLoadingLogs,
+    error,
     setStep,
+    resetToStep,
   } = useWizardStore();
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const currentLogRef = useRef(0);
-
-  useEffect(() => {
-    // ローディングシミュレーションを開始
-    clearLoadingLogs();
-    setProgress(0);
-    currentLogRef.current = 0;
-
-    intervalRef.current = setInterval(() => {
-      if (currentLogRef.current < LOADING_MESSAGES.length) {
-        addLoadingLog(LOADING_MESSAGES[currentLogRef.current]);
-        setProgress(
-          Math.min(
-            ((currentLogRef.current + 1) / LOADING_MESSAGES.length) * 100,
-            100
-          )
-        );
-        currentLogRef.current++;
-      } else {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
-        // 完了後、ステップ4へ遷移
-        setTimeout(() => setStep(4), 500);
-      }
-    }, 1200);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
-
   const cancelGeneration = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    setStep(2);
+    resetToStep(2);
   };
 
   return (
@@ -87,8 +36,16 @@ const LoadingScreen = () => {
 
       <h2 className="text-2xl font-bold text-slate-800 mb-2">動画を生成中...</h2>
       <p className="text-slate-500 mb-8 font-medium">
-        AIが図解スライドと音声を合成しています。
+        VOICEVOXで音声を合成し、動画を生成しています。
       </p>
+
+      {/* Error Display */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-left">
+          <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
+          <p className="text-red-700 text-sm">{error}</p>
+        </div>
+      )}
 
       {/* Terminal-style Log Display */}
       <div className="bg-slate-900 rounded-xl p-4 text-left font-mono text-sm h-48 overflow-y-auto shadow-inner border border-slate-700 mb-8">
@@ -98,7 +55,9 @@ const LoadingScreen = () => {
             <span className="animate-in fade-in duration-500">{log.message}</span>
           </div>
         ))}
-        {progress < 100 && <div className="text-white animate-pulse">_</div>}
+        {!error && progress < 100 && (
+          <div className="text-white animate-pulse">_</div>
+        )}
       </div>
 
       {/* Cancel Button */}

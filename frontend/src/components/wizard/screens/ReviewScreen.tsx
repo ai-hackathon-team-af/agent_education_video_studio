@@ -1,11 +1,32 @@
-import { ArrowLeft, CheckCircle, FileText, Cpu, Lightbulb } from "lucide-react";
+import { ArrowLeft, CheckCircle, FileText, Cpu, Lightbulb, Loader2 } from "lucide-react";
 import { useWizardStore } from "@/stores/wizardStore";
 
 const ReviewScreen = () => {
-  const { setStep } = useWizardStore();
+  const {
+    originalText,
+    generatedScript,
+    isProcessing,
+    setStep,
+    startVideoGeneration,
+  } = useWizardStore();
 
   const goBack = () => setStep(1);
-  const approveDraft = () => setStep(3);
+
+  const approveDraft = async () => {
+    setStep(3);
+    await startVideoGeneration();
+  };
+
+  // 台本がない場合
+  if (!generatedScript) {
+    return (
+      <div className="max-w-6xl mx-auto py-8 px-6">
+        <div className="text-center py-12">
+          <p className="text-slate-500">台本を生成中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-6">
@@ -22,15 +43,25 @@ const ReviewScreen = () => {
           <div>
             <h2 className="text-2xl font-bold text-slate-800">構成・台本の確認</h2>
             <p className="text-slate-500">
-              AIが「つまずきポイント」を補強した特別版です。
+              AIが生成した台本を確認してください。
             </p>
           </div>
         </div>
         <button
           onClick={approveDraft}
-          className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-2"
+          disabled={isProcessing}
+          className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
         >
-          <CheckCircle size={20} /> この内容で動画化する
+          {isProcessing ? (
+            <>
+              <Loader2 className="animate-spin" size={20} />
+              処理中...
+            </>
+          ) : (
+            <>
+              <CheckCircle size={20} /> この内容で動画化する
+            </>
+          )}
         </button>
       </div>
 
@@ -42,90 +73,66 @@ const ReviewScreen = () => {
             <FileText size={16} /> 元の教材テキスト
           </div>
           <div className="prose prose-slate max-w-none text-slate-600">
-            <p className="text-lg font-bold text-slate-800">
-              第2章：物体の運動と力
-            </p>
-            <p className="bg-yellow-100 px-1 border-b-2 border-yellow-400 text-slate-900">
-              物体に力がはたらかないとき、または、はたらいている力がつり合っているとき、静止している物体は静止し続け、動いている物体はそのままの速さで等速直線運動を続ける。これを慣性の法則という。
-            </p>
-            <p>慣性の大きさは物体の質量に関係しており...</p>
-            <div className="mt-4 p-4 border rounded-lg bg-white border-slate-200 text-center text-slate-400 italic">
-              [ここに斜面を転がるボールの図解]
-            </div>
-            <p className="mt-4">
-              具体例としては、電車が急停車したときに体が前に倒れそうになる現象が挙げられる。
-            </p>
+            <p className="whitespace-pre-wrap">{originalText}</p>
           </div>
         </div>
 
-        {/* Right: AI Agentic Script */}
+        {/* Right: AI Generated Script */}
         <div className="bg-white rounded-2xl p-6 border-2 border-blue-100 overflow-y-auto relative shadow-sm">
           <div className="flex items-center gap-2 mb-6 text-blue-600 text-sm font-bold uppercase tracking-wider">
-            <Cpu size={16} /> AI生成台本 (教育的最適化済み)
+            <Cpu size={16} /> AI生成台本
           </div>
 
+          {/* Script Title */}
+          <div className="mb-6 p-4 bg-blue-50 rounded-xl">
+            <p className="text-lg font-bold text-blue-900">{generatedScript.title}</p>
+            <p className="text-sm text-blue-600 mt-1">
+              推定再生時間: {generatedScript.estimated_duration}
+            </p>
+          </div>
+
+          {/* Script Sections */}
           <div className="space-y-6">
-            {/* Segment 1 */}
-            <div className="flex gap-4">
-              <div className="w-12 text-slate-400 text-xs font-mono pt-1">
-                00:00
-              </div>
-              <div className="flex-1">
-                <p className="text-slate-500 italic text-xs mb-1">
-                  [タイトル表示：身の回りの慣性の法則]
+            {generatedScript.sections.map((section, sectionIndex) => (
+              <div key={sectionIndex} className="border-l-2 border-slate-200 pl-4">
+                <p className="text-sm font-bold text-slate-500 mb-3">
+                  {section.section_name}
                 </p>
-                <p className="text-slate-800">
-                  こんにちは！今日は理科の「慣性の法則」について学んでいきましょう。
-                </p>
+                {section.segments.map((segment, segmentIndex) => (
+                  <div key={segmentIndex} className="mb-4">
+                    <div className="flex gap-4">
+                      <div className="w-16 text-slate-400 text-xs font-mono pt-1 flex-shrink-0">
+                        {segment.speaker === "ずんだもん" ? "🟢" : "🔵"}{" "}
+                        {segment.speaker}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-slate-800">{segment.text}</p>
+                        {segment.expression && segment.expression !== "normal" && (
+                          <p className="text-xs text-slate-400 mt-1">
+                            表情: {segment.expression}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
+            ))}
+          </div>
+
+          {/* AI Note */}
+          <div className="mt-6 bg-amber-50 border border-amber-200 p-4 rounded-2xl flex gap-3">
+            <div className="bg-amber-400 p-1.5 rounded-full h-fit mt-0.5">
+              <Lightbulb size={16} className="text-white" />
             </div>
-
-            {/* Segment 2 - Highlighted */}
-            <div className="relative group">
-              <div className="absolute -left-2 top-0 bottom-0 w-1 bg-blue-500 rounded-full" />
-              <div className="flex gap-4 bg-blue-50/50 p-3 rounded-r-xl border border-blue-100">
-                <div className="w-12 text-blue-400 text-xs font-mono pt-1">
-                  00:15
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-blue-900 mb-1">
-                    言葉の意味をかみ砕いて説明
-                  </p>
-                  <p className="text-slate-800">
-                    教科書には難しい言葉が並んでいますが、一言で言うと「物体は今の状態を続けたいという、わがままな性質を持っている」ということです。
-                  </p>
-                </div>
-              </div>
-
-              {/* AI Note */}
-              <div className="mt-3 ml-12 bg-amber-50 border border-amber-200 p-3 rounded-2xl flex gap-3 shadow-sm animate-in fade-in slide-in-from-left-2">
-                <div className="bg-amber-400 p-1.5 rounded-full h-fit mt-0.5">
-                  <Lightbulb size={16} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-amber-800 mb-0.5">
-                    AIの判断：難易度調整
-                  </p>
-                  <p className="text-xs text-amber-700 leading-relaxed">
-                    「等速直線運動」という用語の前に「わがままな性質」と比喩を使うことで、直感的な理解を促します。
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Segment 3 */}
-            <div className="flex gap-4">
-              <div className="w-12 text-slate-400 text-xs font-mono pt-1">
-                00:45
-              </div>
-              <div className="flex-1">
-                <p className="text-slate-500 italic text-xs mb-1">
-                  [アニメーション：急ブレーキをかけるバス]
-                </p>
-                <p className="text-slate-800">
-                  例えば、みんながバスに乗っている時を想像してみて。急にブレーキがかかると「おっと！」って体が前にいくよね？
-                </p>
-              </div>
+            <div>
+              <p className="text-sm font-bold text-amber-800 mb-1">
+                AIの生成ポイント
+              </p>
+              <p className="text-sm text-amber-700 leading-relaxed">
+                元のテキストを基に、会話形式で分かりやすく解説する台本を生成しました。
+                ずんだもんとメタンの掛け合いで楽しく学べる内容になっています。
+              </p>
             </div>
           </div>
         </div>

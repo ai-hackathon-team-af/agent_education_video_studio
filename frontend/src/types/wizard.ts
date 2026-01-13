@@ -1,4 +1,5 @@
 // ウィザード用型定義
+import type { ComedyScript } from "./index";
 
 // ステップ定義（1-4）
 export type WizardStep = 1 | 2 | 3 | 4;
@@ -9,38 +10,17 @@ export type Grade = "中学1年生" | "中学2年生" | "中学3年生" | "高�
 // 教科の選択肢
 export type Subject = "理科" | "数学" | "国語" | "英語";
 
-// AI生成台本のセグメント
-export interface ScriptSegment {
-  timestamp: string;
-  speaker?: string;
-  text: string;
-  direction?: string; // 演出指示（例: [タイトル表示]）
-  isHighlighted?: boolean; // AI最適化ポイントかどうか
-  aiNote?: {
-    title: string;
-    description: string;
-  };
-}
-
-// AI生成台本データ
-export interface GeneratedScript {
-  title: string;
-  originalText: string;
-  segments: ScriptSegment[];
-  aiOptimizations: AIOptimization[];
-}
-
-// AIの最適化ポイント
-export interface AIOptimization {
-  type: "understanding_hook" | "visual_effect";
-  title: string;
-  description: string;
-}
-
 // ローディング時のログエントリ
 export interface LoadingLog {
   timestamp: string;
   message: string;
+}
+
+// AIの最適化ポイント（ResultScreen用）
+export interface AIOptimization {
+  type: "understanding_hook" | "visual_effect";
+  title: string;
+  description: string;
 }
 
 // ウィザードの状態
@@ -56,7 +36,7 @@ export interface WizardState {
 
   // === ReviewScreen ===
   originalText: string;
-  generatedScript: GeneratedScript | null;
+  generatedScript: ComedyScript | null;
 
   // === LoadingScreen ===
   loadingLogs: LoadingLog[];
@@ -65,6 +45,7 @@ export interface WizardState {
 
   // === ResultScreen ===
   videoPath: string | null;
+  aiOptimizations: AIOptimization[];
 
   // === 共通 ===
   isProcessing: boolean;
@@ -83,19 +64,24 @@ export interface WizardActions {
   setFileContent: (content: string) => void;
   setGrade: (grade: Grade) => void;
   setSubject: (subject: Subject) => void;
+  uploadFile: (file: File) => Promise<void>;
 
   // ReviewScreen
   setOriginalText: (text: string) => void;
-  setGeneratedScript: (script: GeneratedScript | null) => void;
+  setGeneratedScript: (script: ComedyScript | null) => void;
+  generateScript: () => Promise<void>;
 
   // LoadingScreen
   addLoadingLog: (message: string) => void;
   clearLoadingLogs: () => void;
   setProgress: (progress: number) => void;
   setTaskId: (taskId: string | null) => void;
+  startVideoGeneration: () => Promise<void>;
+  pollVideoStatus: () => Promise<void>;
 
   // ResultScreen
   setVideoPath: (path: string | null) => void;
+  setAiOptimizations: (optimizations: AIOptimization[]) => void;
 
   // 共通
   setIsProcessing: (isProcessing: boolean) => void;

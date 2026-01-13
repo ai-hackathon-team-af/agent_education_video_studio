@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
   CheckCircle,
   PlayCircle,
@@ -10,12 +11,35 @@ import {
 } from "lucide-react";
 import { useWizardStore } from "@/stores/wizardStore";
 
-const ResultScreen = () => {
-  const { setStep, reset } = useWizardStore();
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-  const regenerate = () => setStep(3);
-  const goToReview = () => setStep(2);
+const ResultScreen = () => {
+  const { videoPath, aiOptimizations, generatedScript, setStep, reset, resetToStep } =
+    useWizardStore();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const regenerate = () => {
+    resetToStep(3);
+  };
+
+  const goToReview = () => {
+    resetToStep(2);
+  };
+
   const startOver = () => reset();
+
+  const handleDownload = () => {
+    if (videoPath) {
+      const link = document.createElement("a");
+      link.href = `${API_BASE_URL}${videoPath}`;
+      link.download = generatedScript?.title || "generated-video.mp4";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const videoUrl = videoPath ? `${API_BASE_URL}${videoPath}` : null;
 
   return (
     <div className="max-w-5xl mx-auto py-12 px-6">
@@ -29,6 +53,9 @@ const ResultScreen = () => {
             <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
               動画が完成しました！
             </h2>
+            {generatedScript && (
+              <p className="text-slate-500 text-sm">{generatedScript.title}</p>
+            )}
           </div>
         </div>
 
@@ -52,23 +79,23 @@ const ResultScreen = () => {
         {/* Main Video Section */}
         <div className="bg-white p-4 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100">
           <div className="aspect-video bg-slate-900 rounded-[2rem] overflow-hidden relative group">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <PlayCircle
-                size={80}
-                className="text-white/80 group-hover:scale-110 transition-transform cursor-pointer"
-              />
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-center gap-4">
-              <div className="h-1 bg-white/20 flex-1 rounded-full relative">
-                <div className="absolute inset-y-0 left-0 w-1/4 bg-blue-500 rounded-full" />
+            {videoUrl ? (
+              <video
+                ref={videoRef}
+                src={videoUrl}
+                controls
+                className="w-full h-full object-contain"
+              >
+                お使いのブラウザは動画再生をサポートしていません。
+              </video>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <PlayCircle
+                  size={80}
+                  className="text-white/80 group-hover:scale-110 transition-transform cursor-pointer"
+                />
               </div>
-              <span className="text-white text-xs font-mono font-bold">
-                00:45 / 03:20
-              </span>
-              <div className="w-8 h-8 flex items-center justify-center text-white">
-                <Maximize size={18} />
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -89,34 +116,61 @@ const ResultScreen = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white/60 backdrop-blur-sm p-5 rounded-2xl border border-white">
-                  <p className="text-xs font-bold text-amber-600 mb-2 uppercase tracking-widest">
-                    理解のフック
-                  </p>
-                  <p className="text-lg font-bold text-amber-950 leading-tight">
-                    「慣性」を日常の「わがまま」に擬人化
-                  </p>
-                  <p className="text-sm text-amber-800 mt-2">
-                    抽象的な等速直線運動を、生徒の感情と結びつけて定着させます。
-                  </p>
-                </div>
-                <div className="bg-white/60 backdrop-blur-sm p-5 rounded-2xl border border-white">
-                  <p className="text-xs font-bold text-amber-600 mb-2 uppercase tracking-widest">
-                    視覚演出
-                  </p>
-                  <p className="text-lg font-bold text-amber-950 leading-tight">
-                    身近な「バスの急ブレーキ」を図解
-                  </p>
-                  <p className="text-sm text-amber-800 mt-2">
-                    電車の例よりも日常的なシーンを選ぶことで、放課後の対話を誘発します。
-                  </p>
-                </div>
+                {aiOptimizations.length > 0 ? (
+                  aiOptimizations.map((opt, index) => (
+                    <div
+                      key={index}
+                      className="bg-white/60 backdrop-blur-sm p-5 rounded-2xl border border-white"
+                    >
+                      <p className="text-xs font-bold text-amber-600 mb-2 uppercase tracking-widest">
+                        {opt.type === "understanding_hook"
+                          ? "理解のフック"
+                          : "視覚演出"}
+                      </p>
+                      <p className="text-lg font-bold text-amber-950 leading-tight">
+                        {opt.title}
+                      </p>
+                      <p className="text-sm text-amber-800 mt-2">
+                        {opt.description}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className="bg-white/60 backdrop-blur-sm p-5 rounded-2xl border border-white">
+                      <p className="text-xs font-bold text-amber-600 mb-2 uppercase tracking-widest">
+                        会話形式
+                      </p>
+                      <p className="text-lg font-bold text-amber-950 leading-tight">
+                        ずんだもんとメタンの掛け合い
+                      </p>
+                      <p className="text-sm text-amber-800 mt-2">
+                        楽しい会話形式で、難しい内容も分かりやすく解説します。
+                      </p>
+                    </div>
+                    <div className="bg-white/60 backdrop-blur-sm p-5 rounded-2xl border border-white">
+                      <p className="text-xs font-bold text-amber-600 mb-2 uppercase tracking-widest">
+                        音声合成
+                      </p>
+                      <p className="text-lg font-bold text-amber-950 leading-tight">
+                        VOICEVOXによる自然な音声
+                      </p>
+                      <p className="text-sm text-amber-800 mt-2">
+                        高品質な音声合成で、聞き取りやすい解説動画を生成しました。
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-4">
-            <button className="flex-1 bg-blue-600 text-white rounded-[2rem] font-bold hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-[0.98] flex flex-col items-center justify-center p-6 border-b-4 border-blue-800">
+            <button
+              onClick={handleDownload}
+              disabled={!videoPath}
+              className="flex-1 bg-blue-600 text-white rounded-[2rem] font-bold hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-[0.98] flex flex-col items-center justify-center p-6 border-b-4 border-blue-800 disabled:bg-slate-300 disabled:border-slate-400 disabled:cursor-not-allowed"
+            >
               <Download size={32} className="mb-2" />
               <span className="text-xl">PCに保存</span>
               <span className="text-blue-200 text-xs font-normal">
