@@ -23,7 +23,7 @@ const LoadingScreen = () => {
     setStep,
   } = useWizardStore();
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentLogRef = useRef(0);
 
   useEffect(() => {
