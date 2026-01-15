@@ -196,7 +196,11 @@ class ComedyTitleGenerator:
             title = ComedyTitle(
                 title=candidate.title,
                 theme=theme,
-                clickbait_elements=[],
+                clickbait_elements=[
+                    candidate.hook_pattern,
+                    candidate.situation,
+                    candidate.chaos_element,
+                ],
                 mode=ScriptMode.COMEDY,
             )
 
