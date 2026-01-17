@@ -79,7 +79,7 @@ const InputScreen = () => {
 
       {/* ファイルアップロードエリア */}
       <div
-        className={`bg-white p-8 rounded-3xl border-2 border-dashed transition-colors cursor-pointer group mb-8 ${
+        className={`bg-white p-8 rounded-3xl border-2 border-dashed transition-colors cursor-pointer group mb-6 ${
           isProcessing
             ? "border-blue-300 bg-blue-50"
             : fileName
@@ -121,6 +121,22 @@ const InputScreen = () => {
               : fileName || "ファイルをドラッグ＆ドロップ、またはクリックして選択"}
           </p>
           <p className="text-sm text-slate-400 mt-2">PDF, Word (.docx) 対応</p>
+        </div>
+      </div>
+
+      {/* キャラクター説明 */}
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 text-left">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="text-amber-500 flex-shrink-0 mt-0.5" size={20} />
+          <div>
+            <p className="text-sm font-semibold text-amber-800 mb-1">
+              動画のキャラクターについて
+            </p>
+            <p className="text-sm text-amber-700">
+              生成される動画では「ずんだもん」「めたん」「つむぎ」の3キャラクターが解説を行います。
+              VOICEVOXの音声合成を使用した楽しい掛け合い形式の解説動画が作成されます。
+            </p>
+          </div>
         </div>
       </div>
 
