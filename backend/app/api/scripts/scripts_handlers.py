@@ -116,7 +116,7 @@ async def handle_generate_full_script(request: FullScriptRequest) -> FullScriptR
         )
 
         # 2. アウトライン生成
-        outline, _ = generator.generate_outline(
+        outline, youtube_metadata, _ = generator.generate_outline(
             title_data=title,
             reference_info=reference_info,
             model=request.model,

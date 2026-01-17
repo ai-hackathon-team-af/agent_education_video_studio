@@ -225,10 +225,14 @@ def generate_video_task(
             logger.warning(f"Failed to cleanup temp files: {cleanup_error}")
         
         logger.info(f"動画生成タスク完了 (task_id={self.request.id}): {output_path}")
-        
+
+        # ファイル名を抽出してAPIパスを生成
+        filename = os.path.basename(output_path)
+        api_video_path = f"/outputs/{filename}"
+
         return {
             'status': 'completed',
-            'video_path': output_path,
+            'video_path': api_video_path,
             'message': '動画生成が完了しました'
         }
         
