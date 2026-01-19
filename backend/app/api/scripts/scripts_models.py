@@ -18,7 +18,7 @@ class TitleRequest(BaseModel):
     """タイトル生成リクエスト"""
 
     mode: ScriptMode = Field(default=ScriptMode.COMEDY, description="生成モード（comedyのみ）")
-    input_text: str = Field(..., description="漫談のテーマ")
+    input_text: str = Field(..., description="授業のテーマ")
     model: Optional[str] = Field(None, description="使用するLLMモデルID")
     temperature: Optional[float] = Field(None, description="生成温度")
 
@@ -74,7 +74,7 @@ class FullScriptRequest(BaseModel):
     """完全台本生成リクエスト（3段階一括）"""
 
     mode: ScriptMode = Field(default=ScriptMode.COMEDY, description="生成モード（comedyのみ）")
-    input_text: str = Field(..., description="漫談のテーマ")
+    input_text: str = Field(..., description="授業のテーマ")
     model: Optional[str] = Field(None, description="使用するLLMモデルID")
     temperature: Optional[float] = Field(None, description="生成温度")
 

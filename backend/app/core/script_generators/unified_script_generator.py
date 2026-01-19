@@ -59,10 +59,10 @@ class UnifiedScriptGenerator:
             if temperature is None:
                 temperature = model_config["default_temperature"]
 
-            # お笑いモードはtemperatureを高めに調整
+            # 教育動画モードはtemperatureを高めに調整
             if temperature < 0.8:
                 temperature = 0.8
-                logger.info(f"お笑いモードのためtemperatureを{temperature}に調整")
+                logger.info(f"教育動画モードのためtemperatureを{temperature}に調整")
 
             llm = create_llm_instance(model, temperature, model_config)
 
@@ -115,10 +115,10 @@ class UnifiedScriptGenerator:
             if temperature is None:
                 temperature = model_config["default_temperature"]
 
-            # お笑いモードはtemperatureを高めに調整
+            # 教育動画モードはtemperatureを高めに調整
             if temperature < 0.8:
                 temperature = 0.8
-                logger.info(f"お笑いモードのためtemperatureを{temperature}に調整")
+                logger.info(f"教育動画モードのためtemperatureを{temperature}に調整")
 
             llm = create_llm_instance(model, temperature, model_config)
 
@@ -173,10 +173,10 @@ class UnifiedScriptGenerator:
             if temperature is None:
                 temperature = model_config["default_temperature"]
 
-            # お笑いモードはtemperatureを高めに調整
+            # 教育動画モードはtemperatureを高めに調整
             if temperature < 0.8:
                 temperature = 0.8
-                logger.info(f"お笑いモードのためtemperatureを{temperature}に調整")
+                logger.info(f"教育動画モードのためtemperatureを{temperature}に調整")
 
             llm = create_llm_instance(model, temperature, model_config)
 

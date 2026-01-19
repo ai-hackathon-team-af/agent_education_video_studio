@@ -141,9 +141,9 @@ async def handle_generate_full_script(request: FullScriptRequest) -> FullScriptR
 
 
 async def handle_generate_comedy_titles_batch() -> ComedyTitleBatch:
-    """お笑いタイトル量産ハンドラー"""
+    """教育動画タイトル量産ハンドラー"""
     try:
-        logger.info("お笑いタイトル量産リクエスト")
+        logger.info("教育動画タイトル量産リクエスト")
 
         from app.core.script_generators.comedy import ComedyScriptGenerator
         from app.core.script_generators.generate_food_over import create_llm_instance
@@ -151,10 +151,10 @@ async def handle_generate_comedy_titles_batch() -> ComedyTitleBatch:
 
         generator = ComedyScriptGenerator()
 
-        # モデル設定（お笑いモードは高temperature推奨）
+        # モデル設定（教育動画モードは高temperature推奨）
         model_config = get_default_model_config()
         model = model_config["id"]
-        temperature = 0.9  # お笑いモードは高めに固定
+        temperature = 0.9  # 教育動画モードは高めに固定
 
         llm = create_llm_instance(model, temperature, model_config)
 
@@ -166,7 +166,7 @@ async def handle_generate_comedy_titles_batch() -> ComedyTitleBatch:
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"お笑いタイトル量産エラー: {str(e)}", exc_info=True)
+        logger.error(f"教育動画タイトル量産エラー: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

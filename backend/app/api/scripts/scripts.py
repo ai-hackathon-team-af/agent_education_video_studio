@@ -1,4 +1,4 @@
-"""お笑い漫談台本生成API（Comedy専用）"""
+"""教育動画台本生成API"""
 
 from fastapi import APIRouter
 from app.models.script_models import ComedyTitleBatch
@@ -32,9 +32,9 @@ router = APIRouter()
 @router.post("/title", response_model=TitleResponse)
 async def generate_title(request: TitleRequest):
     """
-    タイトル生成（Comedy専用）
+    タイトル生成（教育動画）
 
-    - **input_text**: 漫談のテーマ
+    - **input_text**: 授業のテーマ
     - **model**: 使用するLLMモデル（省略可）
     - **temperature**: 生成温度（省略可）
     """
@@ -44,7 +44,7 @@ async def generate_title(request: TitleRequest):
 @router.post("/outline", response_model=OutlineResponse)
 async def generate_outline(request: OutlineRequest):
     """
-    アウトライン生成（Comedy専用）
+    アウトライン生成（教育動画）
 
     - **title_data**: 生成されたタイトル
     - **model**: 使用するLLMモデル（省略可）
@@ -56,7 +56,7 @@ async def generate_outline(request: OutlineRequest):
 @router.post("/script", response_model=ScriptResponse)
 async def generate_script(request: ScriptRequest):
     """
-    台本生成（Comedy専用）
+    台本生成（教育動画）
 
     - **outline_data**: 生成されたアウトライン
     - **model**: 使用するLLMモデル（省略可）
@@ -68,9 +68,9 @@ async def generate_script(request: ScriptRequest):
 @router.post("/full", response_model=FullScriptResponse)
 async def generate_full_script(request: FullScriptRequest):
     """
-    完全台本生成（3段階一括）（Comedy専用）
+    完全台本生成（3段階一括）（教育動画）
 
-    - **input_text**: 漫談のテーマ
+    - **input_text**: 授業のテーマ
     - **model**: 使用するLLMモデル（省略可）
     - **temperature**: 生成温度（省略可）
     """
@@ -80,9 +80,9 @@ async def generate_full_script(request: FullScriptRequest):
 @router.post("/comedy/titles/batch")
 async def generate_comedy_titles_batch():
     """
-    お笑いモード: ランダムタイトル量産（20-30個）
+    教育動画モード: ランダムタイトル量産（20-30個）
 
-    テーマ入力不要で、AIが自動的にバカバカしいタイトルを20-30個生成します。
+    テーマ入力不要で、AIが自動的に教育動画タイトルを20-30個生成します。
     """
     return await handle_generate_comedy_titles_batch()
 
@@ -90,7 +90,7 @@ async def generate_comedy_titles_batch():
 @router.post("/comedy/themes/batch", response_model=ThemeBatchResponse)
 async def generate_theme_batch():
     """
-    お笑いモード: テーマ候補生成（15-20個）
+    教育動画モード: テーマ候補生成（15-20個）
 
     テーマ候補（単語・フレーズ）を15-20個生成します。
     """
@@ -100,7 +100,7 @@ async def generate_theme_batch():
 @router.post("/comedy/titles/from-theme", response_model=ComedyTitleBatch)
 async def generate_titles_from_theme(request: ThemeTitleRequest):
     """
-    お笑いモード: テーマベースタイトル生成
+    教育動画モード: テーマベースタイトル生成
 
     指定されたテーマからタイトルを20個生成します。
 
@@ -115,10 +115,10 @@ async def generate_titles_from_theme(request: ThemeTitleRequest):
 async def save_script_to_file(request: dict):
     """
     生成された台本をJSONファイルとして保存
-    
+
     Args:
         request: {"script": 台本データ, "filename": ファイル名（オプション）}
-    
+
     Returns:
         保存されたファイルのパス
     """
@@ -129,7 +129,7 @@ async def save_script_to_file(request: dict):
 async def get_available_models():
     """
     利用可能なAIモデルの一覧を取得
-    
+
     Returns:
         - models: 利用可能なモデルのリスト
         - default_model_id: デフォルトモデルID
@@ -141,4 +141,4 @@ async def get_available_models():
 @router.get("/health")
 async def health_check():
     """ヘルスチェック"""
-    return {"status": "healthy", "service": "comedy_script_generator"}
+    return {"status": "healthy", "service": "education_script_generator"}

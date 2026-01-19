@@ -131,7 +131,7 @@ class ComedyTitleGenerator:
         progress_callback: Optional[Callable[[str], None]] = None,
     ) -> ComedyTitleBatch:
         """ランダムにタイトルを20-30個量産する"""
-        logger.info("お笑いモード タイトル量産開始")
+        logger.info("教育動画モード タイトル量産開始")
 
         try:
             if progress_callback:
@@ -146,8 +146,8 @@ class ComedyTitleGenerator:
             )
 
             system_message = (
-                "あなたは、ずんだもん・めたん・つむぎの3名によるYouTube漫談の企画・タイトルを無限に生み出すプロの放送作家です。"
-                "ユーザーからのテーマ入力なしに、お笑いの構造に基づいた斬新なタイトルを大量に生成します。"
+                "あなたは、ずんだもん・めたん・つむぎの3名によるYouTube教育動画の企画・タイトルを無限に生み出すプロの塾講師です。"
+                "ユーザーからのテーマ入力なしに、中高生の学習意欲を刺激する魅力的なタイトルを大量に生成します。"
                 "重要: タイトルは必ず30文字以内で生成してください。"
                 '重要: JSON出力時、文字列値内で二重引用符（"）を使用する場合は必ずバックスラッシュでエスケープしてください（\\"）。'
             )
@@ -179,14 +179,15 @@ class ComedyTitleGenerator:
         llm: Any,
         progress_callback: Optional[Callable[[str], None]] = None,
     ) -> ComedyTitle:
-        """テーマからバカバカしいタイトルを生成する（バッチ生成から1つ選択）"""
-        logger.info(f"お笑いモード タイトル生成開始（バッチ生成から1つ選択）")
+        """テーマから教育動画のタイトルを生成する（テーマベース生成から1つ選択）"""
+        logger.info(f"教育動画モード タイトル生成開始: テーマ={theme}")
 
         try:
             if progress_callback:
-                progress_callback("📝 バカバカしいタイトルを生成中...")
+                progress_callback(f"📝 「{theme}」の教育動画タイトルを生成中...")
 
-            title_batch = self.generate_title_batch(llm, progress_callback)
+            # テーマベースでタイトルを生成
+            title_batch = self.generate_title_from_theme(theme, llm, progress_callback)
 
             if not title_batch.titles:
                 raise ValueError("タイトル候補が生成されませんでした")
@@ -205,6 +206,7 @@ class ComedyTitleGenerator:
             )
 
             logger.info(f"タイトル生成成功: {title.title}")
+            logger.info(f"テーマ: {theme}")
             logger.info(f"フックパターン: {candidate.hook_pattern}")
 
             return title
@@ -286,8 +288,8 @@ class ComedyTitleGenerator:
             prompt_text = prompt_text + theme_instruction
 
             system_message = (
-                "あなたは、ずんだもん・めたん・つむぎの3名によるYouTube漫談の企画・タイトルを無限に生み出すプロの放送作家です。"
-                f"ユーザーが指定したテーマ「{theme}」を基に、お笑いの構造に基づいた斬新なタイトルを大量に生成します。"
+                "あなたは、ずんだもん・めたん・つむぎの3名によるYouTube教育動画の企画・タイトルを無限に生み出すプロの塾講師です。"
+                f"ユーザーが指定したテーマ「{theme}」を基に、中高生の学習意欲を刺激する魅力的なタイトルを大量に生成します。"
                 "重要: タイトルは必ず30文字以内で生成してください。"
                 '重要: JSON出力時、文字列値内で二重引用符（"）を使用する場合は必ずバックスラッシュでエスケープしてください（\\"）。'
             )

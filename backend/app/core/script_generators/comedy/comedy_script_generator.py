@@ -1,4 +1,4 @@
-"""お笑いモード専用の台本生成ロジック"""
+"""教育動画用の台本生成ロジック"""
 
 import json
 import re
@@ -26,7 +26,7 @@ logger = get_logger(__name__)
 
 
 class ComedyScriptGenerator:
-    """お笑いモード専用生成ロジック"""
+    """教育動画用生成ロジック"""
 
     def __init__(self):
         self.mode = ScriptMode.COMEDY
@@ -155,7 +155,7 @@ class ComedyScriptGenerator:
         Returns:
             ComedyScript: 生成された台本
         """
-        logger.info(f"お笑いモード 台本生成開始: {outline.theme}")
+        logger.info(f"教育動画モード 台本生成開始: {outline.theme}")
 
         try:
             if progress_callback:
@@ -188,7 +188,7 @@ class ComedyScriptGenerator:
                     mode=ScriptMode.COMEDY,
                     section_definition=section_def,
                     story_summary=outline.story_summary,
-                    reference_information="",  # お笑いモードでは参照情報不要
+                    reference_information="",  # 教育動画モードでは参照情報不要
                     previous_sections=previous_sections_summary,
                     character_moods=character_moods_dict,
                     forced_ending_type=outline.ending_type,
@@ -296,7 +296,7 @@ class ComedyScriptGenerator:
         llm: Any,
         progress_callback: Optional[Callable[[str], None]] = None,
     ) -> ComedyTitle:
-        """テーマからバカバカしいタイトルを生成（後方互換性のため）"""
+        """テーマから教育動画タイトルを生成（後方互換性のため）"""
         return self.title_generator.generate_title(theme, llm, progress_callback)
 
     def generate_outline(
@@ -315,7 +315,7 @@ class ComedyScriptGenerator:
         Returns:
             ComedyOutline: 生成されたアウトライン
         """
-        logger.info(f"お笑いモード アウトライン生成開始: {title.theme}")
+        logger.info(f"教育動画モード アウトライン生成開始: {title.theme}")
 
         try:
             if progress_callback:
@@ -362,11 +362,12 @@ class ComedyScriptGenerator:
 
             # システムメッセージ
             system_message = (
-                "あなたは、お笑い台本の脚本家です。"
-                "バカバカしく面白いストーリー構成を設計するプロフェッショナルです。"
-                "教育的要素は一切排除してください。"
-                "重要: 与えられたタイトルとフック要素を必ずストーリーに反映させ、"
-                "視聴者の期待を裏切らない展開を作成してください。"
+                "あなたは、教育動画の台本を設計する塾講師です。"
+                "分かりやすく楽しい授業構成を設計するプロフェッショナルです。"
+                "生徒の理解を最優先にしてください。"
+                "重要: 与えられたタイトルと学習ポイントを必ずストーリーに反映させ、"
+                "視聴者が「分かった！」と思える展開を作成してください。"
+                "重要: 必ず日本語のみで出力してください。英語やヒンディー語など他言語の文字は絶対に使用しないでください。"
             )
 
             # LLM呼び出し
