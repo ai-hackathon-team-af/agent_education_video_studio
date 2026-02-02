@@ -1,5 +1,18 @@
-import { ArrowLeft, CheckCircle, FileText, Cpu, Lightbulb, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import {
+  ArrowLeft,
+  CheckCircle,
+  FileText,
+  Cpu,
+  Lightbulb,
+  Loader2,
+  Image,
+  RefreshCw,
+} from "lucide-react";
 import { useWizardStore } from "@/stores/wizardStore";
+import { scriptApi } from "@/api/scripts";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 const ReviewScreen = () => {
   const {
@@ -10,12 +23,75 @@ const ReviewScreen = () => {
     startVideoGeneration,
   } = useWizardStore();
 
+  // 背景画像の状態
+  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
+  const [isLoadingBackground, setIsLoadingBackground] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [backgroundError, setBackgroundError] = useState<string | null>(null);
+  const hasGeneratedBackground = useRef(false);
+
   const goBack = () => setStep(1);
 
   const approveDraft = async () => {
     setStep(3);
     await startVideoGeneration();
   };
+
+  // 台本データから背景画像を生成
+  const generateBackground = async () => {
+    if (!generatedScript) return;
+
+    setIsLoadingBackground(true);
+    setBackgroundError(null);
+    try {
+      const response = await scriptApi.regenerateBackground(
+        generatedScript.theme,
+        generatedScript as unknown as Record<string, unknown>
+      );
+      if (response.exists && response.background_url) {
+        setBackgroundUrl(`${API_BASE_URL}${response.background_url}?t=${Date.now()}`);
+      }
+    } catch (error) {
+      console.error("背景画像の生成に失敗:", error);
+      setBackgroundError("背景画像の生成に失敗しました");
+    } finally {
+      setIsLoadingBackground(false);
+    }
+  };
+
+  // 背景画像を再生成
+  const regenerateBackground = async () => {
+    if (!generatedScript?.theme) return;
+
+    setIsRegenerating(true);
+    setBackgroundError(null);
+    try {
+      // 台本データをAPIに渡してキーワード抽出に使用
+      const response = await scriptApi.regenerateBackground(
+        generatedScript.theme,
+        generatedScript as unknown as Record<string, unknown>
+      );
+      if (response.exists && response.background_url) {
+        // キャッシュ回避のためにタイムスタンプを追加
+        setBackgroundUrl(
+          `${API_BASE_URL}${response.background_url}?t=${Date.now()}`
+        );
+      }
+    } catch (error) {
+      console.error("背景画像の再生成に失敗:", error);
+      setBackgroundError("背景画像の再生成に失敗しました");
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  // 台本が読み込まれたら背景を生成（初回のみ）
+  useEffect(() => {
+    if (generatedScript && !hasGeneratedBackground.current && !isLoadingBackground) {
+      hasGeneratedBackground.current = true;
+      generateBackground();
+    }
+  }, [generatedScript]);
 
   // 台本がない場合
   if (!generatedScript) {
@@ -41,7 +117,9 @@ const ReviewScreen = () => {
             <ArrowLeft size={24} />
           </button>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">構成・台本の確認</h2>
+            <h2 className="text-2xl font-bold text-slate-800">
+              構成・台本の確認
+            </h2>
             <p className="text-slate-500">
               AIが生成した台本を確認してください。
             </p>
@@ -65,8 +143,71 @@ const ReviewScreen = () => {
         </button>
       </div>
 
+      {/* Background Preview Section */}
+      <div className="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-100">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2 text-purple-600 text-sm font-bold uppercase tracking-wider">
+            <Image size={16} /> 背景画像プレビュー
+          </div>
+          <button
+            onClick={regenerateBackground}
+            disabled={isRegenerating || isLoadingBackground}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-all flex items-center gap-2 disabled:bg-purple-300 disabled:cursor-not-allowed"
+          >
+            {isRegenerating ? (
+              <>
+                <Loader2 className="animate-spin" size={16} />
+                生成中...
+              </>
+            ) : (
+              <>
+                <RefreshCw size={16} /> 背景を再生成
+              </>
+            )}
+          </button>
+        </div>
+
+        <div className="flex gap-6">
+          {/* Background Image */}
+          <div className="w-80 h-44 bg-slate-200 rounded-xl overflow-hidden flex-shrink-0 relative">
+            {isLoadingBackground ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Loader2 className="animate-spin text-slate-400" size={32} />
+              </div>
+            ) : backgroundUrl ? (
+              <img
+                src={backgroundUrl}
+                alt="背景プレビュー"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                <div className="text-center">
+                  <Image size={32} className="mx-auto mb-2" />
+                  <p className="text-sm">背景画像なし</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Background Info */}
+          <div className="flex-1">
+            <p className="text-sm text-slate-600 mb-2">
+              <span className="font-medium">タイトル:</span> {generatedScript.title}
+            </p>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              この背景画像は、台本のタイトルに基づいてAIが自動生成しました。
+              イメージに合わない場合は「背景を再生成」ボタンで別の画像を生成できます。
+            </p>
+            {backgroundError && (
+              <p className="text-sm text-red-500 mt-2">{backgroundError}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[650px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[500px]">
         {/* Left: Original Text */}
         <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 overflow-y-auto">
           <div className="flex items-center gap-2 mb-4 text-slate-500 text-sm font-bold uppercase tracking-wider">
@@ -85,7 +226,9 @@ const ReviewScreen = () => {
 
           {/* Script Title */}
           <div className="mb-6 p-4 bg-blue-50 rounded-xl">
-            <p className="text-lg font-bold text-blue-900">{generatedScript.title}</p>
+            <p className="text-lg font-bold text-blue-900">
+              {generatedScript.title}
+            </p>
             <p className="text-sm text-blue-600 mt-1">
               推定再生時間: {generatedScript.estimated_duration}
             </p>

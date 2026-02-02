@@ -27,6 +27,8 @@ export interface VideoGenerationRequest {
   speed?: number;
   pitch?: number;
   intonation?: number;
+  theme?: string;
+  script_data?: Record<string, unknown>;
 }
 
 export interface VideoGenerationResponse {
@@ -287,4 +289,18 @@ export interface FoodOverconsumptionScript {
   title: string;
   food_name: string;
   sections: VideoSection[];
+}
+
+// === 背景画像API ===
+export interface BackgroundInfoRequest {
+  theme: string;
+  script_data?: Record<string, unknown>;
+  script_keywords?: string[];
+}
+
+export interface BackgroundInfoResponse {
+  theme: string;
+  background_name: string;
+  background_url: string | null;
+  exists: boolean;
 }

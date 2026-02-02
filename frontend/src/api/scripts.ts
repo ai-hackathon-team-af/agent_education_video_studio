@@ -10,6 +10,7 @@ import type {
   FullScriptResponse,
   ComedyTitleBatch,
   ThemeBatch,
+  BackgroundInfoResponse,
   // 旧型定義（後方互換性）
   OutlineRequest,
   OutlineResponse,
@@ -173,6 +174,37 @@ export const scriptApi = {
     const response = await apiClient.post<FoodOverconsumptionScript>(
       "/scripts/sections",
       data
+    );
+    return response.data;
+  },
+
+  // === 背景画像API ===
+  /**
+   * テーマに基づく背景画像情報を取得
+   */
+  getBackgroundInfo: async (theme: string): Promise<BackgroundInfoResponse> => {
+    const response = await apiClient.post<BackgroundInfoResponse>(
+      "/scripts/background",
+      { theme }
+    );
+    return response.data;
+  },
+
+  /**
+   * テーマに基づく背景画像を再生成
+   */
+  regenerateBackground: async (
+    theme: string,
+    scriptData?: Record<string, unknown>,
+    scriptKeywords?: string[]
+  ): Promise<BackgroundInfoResponse> => {
+    const response = await apiClient.post<BackgroundInfoResponse>(
+      "/scripts/background/regenerate",
+      {
+        theme,
+        script_data: scriptData,
+        script_keywords: scriptKeywords,
+      }
     );
     return response.data;
   },
