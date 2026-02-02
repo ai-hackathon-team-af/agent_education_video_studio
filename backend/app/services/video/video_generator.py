@@ -55,6 +55,8 @@ class VideoGenerator:
         enable_subtitles: bool = True,
         conversation_mode: str = "duo",
         sections: Optional[List[VideoSection]] = None,
+        theme: Optional[str] = None,
+        script_data: Optional[Dict] = None,
     ) -> Optional[str]:
         """会話動画生成（メイン機能）"""
         if not output_path:
@@ -66,7 +68,9 @@ class VideoGenerator:
 
         try:
             character_images = self.resource_manager.load_character_images()
-            backgrounds = self.resource_manager.load_backgrounds()
+            backgrounds = self.resource_manager.load_backgrounds(
+                theme=theme, script_data=script_data
+            )
             item_images = self.resource_manager.load_item_images()
 
             if not self.resource_manager.validate_resources(

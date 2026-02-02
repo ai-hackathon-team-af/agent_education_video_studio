@@ -28,6 +28,8 @@ class VideoGenerationRequest(BaseModel):
     speed: Optional[float] = Field(None, description="話速")
     pitch: Optional[float] = Field(None, description="音高")
     intonation: Optional[float] = Field(None, description="抑揚")
+    theme: Optional[str] = Field(None, description="スクリプトのテーマ（背景選択に使用）")
+    script_data: Optional[Dict[str, Any]] = Field(None, description="台本データ（背景選択に使用）")
 
 
 class VideoGenerationResponse(BaseModel):

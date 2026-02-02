@@ -37,11 +37,13 @@ def generate_video_task(
     sections: Optional[List[Dict[str, Any]]] = None,
     speed: Optional[float] = None,
     pitch: Optional[float] = None,
-    intonation: Optional[float] = None
+    intonation: Optional[float] = None,
+    theme: Optional[str] = None,
+    script_data: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
     動画生成タスク
-    
+
     Args:
         conversations: 会話リスト
         enable_subtitles: 字幕を有効にするか
@@ -50,13 +52,15 @@ def generate_video_task(
         speed: 話速
         pitch: 音高
         intonation: 抑揚
-    
+        theme: スクリプトのテーマ（背景選択に使用）
+        script_data: 台本データ（背景選択に使用）
+
     Returns:
         生成結果
     """
     try:
         logger.info(f"動画生成タスク開始 (task_id={self.request.id})")
-        
+
         # 締めくくりセクションを自動追加
         closing_section = create_closing_section()
         
@@ -205,7 +209,9 @@ def generate_video_task(
             enable_subtitles=enable_subtitles,
             conversation_mode=conversation_mode,
             sections=video_sections,
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
+            theme=theme,
+            script_data=script_data
         )
         
         if not output_path or not os.path.exists(output_path):
