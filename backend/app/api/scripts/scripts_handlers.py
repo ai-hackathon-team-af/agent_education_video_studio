@@ -17,6 +17,8 @@ from .scripts_models import (
     FullScriptResponse,
     ThemeBatchResponse,
     ThemeTitleRequest,
+    BackgroundRequest,
+    BackgroundResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -130,6 +132,8 @@ async def handle_generate_full_script(request: FullScriptRequest) -> FullScriptR
             model=request.model,
             temperature=request.temperature,
         )
+
+        # 背景画像は台本確認画面で生成する
 
         return FullScriptResponse(script=script)
 
@@ -295,5 +299,77 @@ async def handle_generate_theme_titles(request: ThemeTitleRequest) -> ComedyTitl
         raise
     except Exception as e:
         logger.error(f"テーマベースタイトル生成エラー: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def handle_get_background(request: BackgroundRequest) -> BackgroundResponse:
+    """背景画像情報取得ハンドラー"""
+    try:
+        logger.info(f"背景画像情報取得リクエスト: theme={request.theme}")
+
+        from app.core.asset_generators.background_generator import BackgroundImageGenerator
+        from app.config.resource_config.backgrounds import theme_to_background_name
+        import os
+
+        bg_generator = BackgroundImageGenerator()
+        bg_name = theme_to_background_name(request.theme)
+        exists = bg_generator.check_background_exists(bg_name)
+
+        # 背景URLを生成（存在する場合）
+        background_url = None
+        if exists:
+            bg_path = bg_generator.get_background_path(bg_name)
+            if bg_path:
+                # ファイル名を取得してURL生成
+                filename = os.path.basename(bg_path)
+                background_url = f"/assets/backgrounds/{filename}"
+
+        return BackgroundResponse(
+            theme=request.theme,
+            background_name=bg_name,
+            background_url=background_url,
+            exists=exists,
+        )
+
+    except Exception as e:
+        logger.error(f"背景画像情報取得エラー: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def handle_regenerate_background(request: BackgroundRequest) -> BackgroundResponse:
+    """背景画像生成ハンドラー（台本データから生成）"""
+    try:
+        logger.info(f"背景画像生成リクエスト: theme={request.theme}")
+
+        from app.core.asset_generators.background_generator import BackgroundImageGenerator
+        import os
+
+        if not request.script_data:
+            raise HTTPException(
+                status_code=400,
+                detail="script_data is required for background generation"
+            )
+
+        bg_generator = BackgroundImageGenerator()
+
+        # 台本データから背景を生成
+        bg_path = bg_generator.generate_background_from_script(request.script_data)
+        logger.info(f"背景画像を生成しました: {bg_path}")
+
+        # ファイル名を取得してURL生成
+        filename = os.path.basename(bg_path)
+        bg_name = os.path.splitext(filename)[0]
+
+        return BackgroundResponse(
+            theme=request.theme,
+            background_name=bg_name,
+            background_url=f"/assets/backgrounds/{filename}",
+            exists=True,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"背景画像生成エラー: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 

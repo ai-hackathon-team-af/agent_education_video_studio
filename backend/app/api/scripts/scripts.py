@@ -13,6 +13,8 @@ from .scripts_models import (
     FullScriptResponse,
     ThemeBatchResponse,
     ThemeTitleRequest,
+    BackgroundRequest,
+    BackgroundResponse,
 )
 from .scripts_handlers import (
     handle_generate_title,
@@ -24,6 +26,8 @@ from .scripts_handlers import (
     handle_generate_theme_titles,
     handle_save_script_to_file,
     handle_get_available_models,
+    handle_get_background,
+    handle_regenerate_background,
 )
 
 router = APIRouter()
@@ -142,3 +146,35 @@ async def get_available_models():
 async def health_check():
     """ヘルスチェック"""
     return {"status": "healthy", "service": "education_script_generator"}
+
+
+@router.post("/background", response_model=BackgroundResponse)
+async def get_background(request: BackgroundRequest):
+    """
+    テーマに基づく背景画像情報を取得
+
+    - **theme**: テーマ文字列
+
+    Returns:
+        - background_name: 背景ファイル名
+        - background_url: 背景画像URL（存在する場合）
+        - exists: 背景が存在するかどうか
+    """
+    return await handle_get_background(request)
+
+
+@router.post("/background/regenerate", response_model=BackgroundResponse)
+async def regenerate_background(request: BackgroundRequest):
+    """
+    テーマに基づく背景画像を再生成
+
+    既存の背景を削除し、新規にAIで生成します。
+
+    - **theme**: テーマ文字列
+
+    Returns:
+        - background_name: 背景ファイル名
+        - background_url: 背景画像URL
+        - exists: 常にTrue
+    """
+    return await handle_regenerate_background(request)
