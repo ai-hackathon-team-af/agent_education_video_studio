@@ -8,6 +8,9 @@ import {
   Loader2,
   Image,
   RefreshCw,
+  Edit3,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useWizardStore } from "@/stores/wizardStore";
 import { scriptApi } from "@/api/scripts";
@@ -30,6 +33,11 @@ const ReviewScreen = () => {
   const [backgroundError, setBackgroundError] = useState<string | null>(null);
   const hasGeneratedBackground = useRef(false);
 
+  // プロンプト編集の状態
+  const [currentPrompt, setCurrentPrompt] = useState<string>("");
+  const [editedPrompt, setEditedPrompt] = useState<string>("");
+  const [showPromptEditor, setShowPromptEditor] = useState(false);
+
   const goBack = () => setStep(1);
 
   const approveDraft = async () => {
@@ -51,6 +59,11 @@ const ReviewScreen = () => {
       if (response.exists && response.background_url) {
         setBackgroundUrl(`${API_BASE_URL}${response.background_url}?t=${Date.now()}`);
       }
+      // プロンプトを保存
+      if (response.prompt) {
+        setCurrentPrompt(response.prompt);
+        setEditedPrompt(response.prompt);
+      }
     } catch (error) {
       console.error("背景画像の生成に失敗:", error);
       setBackgroundError("背景画像の生成に失敗しました");
@@ -60,22 +73,33 @@ const ReviewScreen = () => {
   };
 
   // 背景画像を再生成
-  const regenerateBackground = async () => {
+  const regenerateBackground = async (useCustomPrompt = false) => {
     if (!generatedScript?.theme) return;
 
     setIsRegenerating(true);
     setBackgroundError(null);
     try {
-      // 台本データをAPIに渡してキーワード抽出に使用
+      // カスタムプロンプトを使用するかどうか
+      const customPrompt = useCustomPrompt && editedPrompt !== currentPrompt
+        ? editedPrompt
+        : undefined;
+
       const response = await scriptApi.regenerateBackground(
         generatedScript.theme,
-        generatedScript as unknown as Record<string, unknown>
+        generatedScript as unknown as Record<string, unknown>,
+        undefined,
+        customPrompt
       );
       if (response.exists && response.background_url) {
         // キャッシュ回避のためにタイムスタンプを追加
         setBackgroundUrl(
           `${API_BASE_URL}${response.background_url}?t=${Date.now()}`
         );
+      }
+      // プロンプトを更新
+      if (response.prompt) {
+        setCurrentPrompt(response.prompt);
+        setEditedPrompt(response.prompt);
       }
     } catch (error) {
       console.error("背景画像の再生成に失敗:", error);
@@ -149,22 +173,32 @@ const ReviewScreen = () => {
           <div className="flex items-center gap-2 text-purple-600 text-sm font-bold uppercase tracking-wider">
             <Image size={16} /> 背景画像プレビュー
           </div>
-          <button
-            onClick={regenerateBackground}
-            disabled={isRegenerating || isLoadingBackground}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-all flex items-center gap-2 disabled:bg-purple-300 disabled:cursor-not-allowed"
-          >
-            {isRegenerating ? (
-              <>
-                <Loader2 className="animate-spin" size={16} />
-                生成中...
-              </>
-            ) : (
-              <>
-                <RefreshCw size={16} /> 背景を再生成
-              </>
-            )}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowPromptEditor(!showPromptEditor)}
+              className="px-4 py-2 bg-white hover:bg-slate-50 text-purple-600 text-sm font-medium rounded-lg transition-all flex items-center gap-2 border border-purple-200"
+            >
+              <Edit3 size={16} />
+              プロンプト編集
+              {showPromptEditor ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            <button
+              onClick={() => regenerateBackground(false)}
+              disabled={isRegenerating || isLoadingBackground}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-all flex items-center gap-2 disabled:bg-purple-300 disabled:cursor-not-allowed"
+            >
+              {isRegenerating ? (
+                <>
+                  <Loader2 className="animate-spin" size={16} />
+                  生成中...
+                </>
+              ) : (
+                <>
+                  <RefreshCw size={16} /> 背景を再生成
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="flex gap-6">
@@ -204,6 +238,42 @@ const ReviewScreen = () => {
             )}
           </div>
         </div>
+
+        {/* Prompt Editor */}
+        {showPromptEditor && (
+          <div className="mt-4 pt-4 border-t border-purple-200">
+            <label className="block text-sm font-medium text-purple-700 mb-2">
+              画像生成プロンプト（英語）
+            </label>
+            <textarea
+              value={editedPrompt}
+              onChange={(e) => setEditedPrompt(e.target.value)}
+              placeholder="背景画像生成用のプロンプトを入力..."
+              className="w-full h-24 p-3 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none resize-none"
+            />
+            <div className="flex justify-between items-center mt-2">
+              <p className="text-xs text-slate-500">
+                プロンプトを編集して「編集したプロンプトで生成」をクリックすると、カスタムプロンプトで背景が生成されます。
+              </p>
+              <button
+                onClick={() => regenerateBackground(true)}
+                disabled={isRegenerating || isLoadingBackground || !editedPrompt.trim()}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-all flex items-center gap-2 disabled:bg-indigo-300 disabled:cursor-not-allowed"
+              >
+                {isRegenerating ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    生成中...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw size={16} /> 編集したプロンプトで生成
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Two Column Layout */}
