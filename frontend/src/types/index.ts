@@ -303,4 +303,5 @@ export interface BackgroundInfoResponse {
   background_name: string;
   background_url: string | null;
   exists: boolean;
+  prompt?: string;
 }

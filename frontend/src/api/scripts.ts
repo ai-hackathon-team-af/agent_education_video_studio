@@ -196,7 +196,8 @@ export const scriptApi = {
   regenerateBackground: async (
     theme: string,
     scriptData?: Record<string, unknown>,
-    scriptKeywords?: string[]
+    scriptKeywords?: string[],
+    customPrompt?: string
   ): Promise<BackgroundInfoResponse> => {
     const response = await apiClient.post<BackgroundInfoResponse>(
       "/scripts/background/regenerate",
@@ -204,6 +205,7 @@ export const scriptApi = {
         theme,
         script_data: scriptData,
         script_keywords: scriptKeywords,
+        custom_prompt: customPrompt,
       }
     );
     return response.data;
