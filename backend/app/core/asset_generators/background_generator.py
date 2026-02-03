@@ -1,7 +1,7 @@
 """Imagen 4を使用した背景画像自動生成"""
 
 import os
-from typing import Optional
+from typing import Optional, Tuple
 
 from app.config import Paths
 from app.utils.logger import get_logger
@@ -64,16 +64,19 @@ class BackgroundImageGenerator:
                 return path
         return None
 
-    def generate_background_from_script(self, script_data: dict) -> str:
+    def generate_background_from_script(
+        self, script_data: dict, custom_prompt: Optional[str] = None
+    ) -> Tuple[str, str]:
         """台本データから背景画像を生成する
 
         常に新規生成する（キャッシュは使わない）
 
         Args:
             script_data: 台本データ（title, theme, sections等を含む辞書）
+            custom_prompt: カスタムプロンプト（指定時は自動生成をスキップ）
 
         Returns:
-            str: 生成された背景画像のパス
+            Tuple[str, str]: (生成された背景画像のパス, 使用されたプロンプト)
         """
         if not script_data:
             raise ValueError("script_data is required")
@@ -81,12 +84,15 @@ class BackgroundImageGenerator:
         # 台本から背景名を生成
         bg_name = script_to_background_name(script_data)
 
-        # 台本からプロンプトを生成
-        prompt = get_background_prompt_from_script(script_data)
+        # カスタムプロンプトが指定されている場合はそれを使用、なければ台本から生成
+        if custom_prompt:
+            prompt = custom_prompt
+        else:
+            prompt = get_background_prompt_from_script(script_data)
 
         return self._generate_background_image(bg_name, prompt)
 
-    def _generate_background_image(self, bg_name: str, prompt: str) -> str:
+    def _generate_background_image(self, bg_name: str, prompt: str) -> Tuple[str, str]:
         """背景画像を生成して保存
 
         Args:
@@ -94,7 +100,7 @@ class BackgroundImageGenerator:
             prompt: 画像生成プロンプト
 
         Returns:
-            str: 保存された画像のパス
+            Tuple[str, str]: (保存された画像のパス, 使用されたプロンプト)
         """
         # クライアント初期化
         self._initialize_client()
@@ -139,7 +145,7 @@ class BackgroundImageGenerator:
             if not os.path.exists(output_path):
                 raise IOError(f"Image file was not saved: {output_path}")
 
-            return output_path
+            return output_path, prompt
 
         except Exception as e:
             logger.error(f"Failed to generate background: {e}", exc_info=True)
