@@ -352,8 +352,16 @@ async def handle_regenerate_background(request: BackgroundRequest) -> Background
 
         bg_generator = BackgroundImageGenerator()
 
-        # 台本データから背景を生成
-        bg_path = bg_generator.generate_background_from_script(request.script_data)
+        # カスタムプロンプトが指定されている場合はそれを使用
+        if request.custom_prompt:
+            bg_path, used_prompt = bg_generator.generate_background_from_script(
+                request.script_data,
+                custom_prompt=request.custom_prompt
+            )
+        else:
+            bg_path, used_prompt = bg_generator.generate_background_from_script(
+                request.script_data
+            )
         logger.info(f"背景画像を生成しました: {bg_path}")
 
         # ファイル名を取得してURL生成
@@ -365,6 +373,7 @@ async def handle_regenerate_background(request: BackgroundRequest) -> Background
             background_name=bg_name,
             background_url=f"/assets/backgrounds/{filename}",
             exists=True,
+            prompt=used_prompt,
         )
 
     except HTTPException:
