@@ -109,6 +109,9 @@ class BackgroundRequest(BaseModel):
     script_keywords: Optional[List[str]] = Field(
         None, description="台本から抽出したキーワード（オプション）"
     )
+    custom_prompt: Optional[str] = Field(
+        None, description="カスタムプロンプト（指定時は台本からの自動生成をスキップ）"
+    )
 
 
 class BackgroundResponse(BaseModel):
@@ -118,4 +121,5 @@ class BackgroundResponse(BaseModel):
     background_name: str = Field(..., description="背景ファイル名（拡張子なし）")
     background_url: Optional[str] = Field(None, description="背景画像URL")
     exists: bool = Field(..., description="背景画像が存在するか")
+    prompt: Optional[str] = Field(None, description="使用されたプロンプト")
 
