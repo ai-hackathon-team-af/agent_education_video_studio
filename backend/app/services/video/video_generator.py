@@ -26,12 +26,12 @@ class VideoGenerator:
     def __init__(self):
         # 口パクデバッグ用: ログレベルを一時的にINFOに設定
         for logger_name in [
-            "src.services.audio_combiner",
-            "src.services.frame_generator",
-            "src.core.video_processor",
-            "src.core.audio_processor",
-            "src.services.bgm_mixer",
-            "config.bgm_library",
+            "app.services.audio_combiner",
+            "app.services.video.frame_generator",
+            "app.core.processors.video_processor",
+            "app.core.processors.audio_processor",
+            "app.services.bgm_mixer",
+            "app.config.resource_config.bgm_library",
         ]:
             logging.getLogger(logger_name).setLevel(logging.INFO)
 
