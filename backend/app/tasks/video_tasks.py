@@ -8,7 +8,7 @@ from app.tasks.celery_app import celery_app
 from app.services.video.video_generator import VideoGenerator
 from app.core.asset_generators.voice_generator import VoiceGenerator
 from app.models.scripts.common import VideoSection
-from app.utils_legacy.files import FileManager
+from app.utils.files import FileManager
 
 logger = logging.getLogger(__name__)
 

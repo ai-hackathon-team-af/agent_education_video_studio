@@ -482,7 +482,6 @@ async def rename_background(id: str, request: BackgroundRenameRequest):
     try:
         from app.config import Paths
         from app.config.content_config.content import Backgrounds
-        from app.utils_legacy.constants import Constants
 
         backgrounds_dir = Paths.get_backgrounds_dir()
         supported_extensions = Backgrounds.get_supported_extensions()
@@ -498,7 +497,7 @@ async def rename_background(id: str, request: BackgroundRenameRequest):
             raise HTTPException(status_code=400, detail="ファイル名が空です")
 
         # 無効な文字をチェック
-        invalid_chars = Constants.INVALID_FILENAME_CHARS
+        invalid_chars = '<>:"/\\|?*'
         for char in invalid_chars:
             if char in new_name:
                 raise HTTPException(

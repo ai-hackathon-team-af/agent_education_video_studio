@@ -8,7 +8,7 @@ from app.models.script_models import (
     YouTubeMetadata,
 )
 from app.core.script_generators.comedy import ComedyScriptGenerator
-from app.core.script_generators.generate_food_over import create_llm_instance
+from app.utils.llm_factory import create_llm_from_model_config
 from app.config.models import get_model_config, get_default_model_config
 from app.utils.logger import get_logger
 
@@ -64,7 +64,7 @@ class UnifiedScriptGenerator:
                 temperature = 0.8
                 logger.info(f"教育動画モードのためtemperatureを{temperature}に調整")
 
-            llm = create_llm_instance(model, temperature, model_config)
+            llm = create_llm_from_model_config(model_config, temperature)
 
             # タイトル生成
             title = self.generator.generate_title(input_text, llm, progress_callback)
@@ -120,7 +120,7 @@ class UnifiedScriptGenerator:
                 temperature = 0.8
                 logger.info(f"教育動画モードのためtemperatureを{temperature}に調整")
 
-            llm = create_llm_instance(model, temperature, model_config)
+            llm = create_llm_from_model_config(model_config, temperature)
 
             # アウトライン生成（メタデータも同時生成）
             outline, youtube_metadata = self.generator.generate_outline(
@@ -178,7 +178,7 @@ class UnifiedScriptGenerator:
                 temperature = 0.8
                 logger.info(f"教育動画モードのためtemperatureを{temperature}に調整")
 
-            llm = create_llm_instance(model, temperature, model_config)
+            llm = create_llm_from_model_config(model_config, temperature)
 
             # 台本生成
             script = self.generator.generate_script(outline_data, llm, progress_callback)

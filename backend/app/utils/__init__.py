@@ -2,11 +2,14 @@
 
 from .logger import get_logger, setup_logger
 from .llm_factory import create_gemini_llm, create_llm_from_model_config
+from .files import FileManager, FileOperations
 
 __all__ = [
     "get_logger",
     "setup_logger",
     "create_gemini_llm",
     "create_llm_from_model_config",
+    "FileManager",
+    "FileOperations",
 ]
 
