@@ -8,7 +8,6 @@ import {
 import { useState } from "react";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
-import Input from "@/components/Input";
 import Select from "@/components/Select";
 import ThemeSelectionSection from "./ThemeSelectionSection";
 import type { ScriptMode } from "@/types";
@@ -39,7 +38,7 @@ const InputSection = ({
   model,
   temperature,
   isGenerating,
-  onInputTextChange,
+  onInputTextChange: _onInputTextChange,
   onModelChange,
   onTemperatureChange,
   onSubmit,

@@ -6,7 +6,7 @@ const LoadingScreen = () => {
     loadingLogs,
     progress,
     error,
-    setStep,
+    setStep: _setStep,
     resetToStep,
   } = useWizardStore();
 

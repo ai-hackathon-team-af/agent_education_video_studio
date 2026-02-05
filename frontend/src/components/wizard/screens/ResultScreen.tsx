@@ -2,7 +2,6 @@ import { useRef } from "react";
 import {
   CheckCircle,
   PlayCircle,
-  Maximize,
   RefreshCw,
   Home,
   Lightbulb,
@@ -14,7 +13,7 @@ import { useWizardStore } from "@/stores/wizardStore";
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const ResultScreen = () => {
-  const { videoPath, aiOptimizations, generatedScript, setStep, reset, resetToStep } =
+  const { videoPath, aiOptimizations, generatedScript, setStep: _setStep, reset, resetToStep } =
     useWizardStore();
   const videoRef = useRef<HTMLVideoElement>(null);
 
