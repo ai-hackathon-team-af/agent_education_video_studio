@@ -27,6 +27,8 @@ export interface VideoGenerationRequest {
   speed?: number;
   pitch?: number;
   intonation?: number;
+  theme?: string;
+  script_data?: Record<string, unknown>;
 }
 
 export interface VideoGenerationResponse {
@@ -113,34 +115,6 @@ export interface ComedyScript {
   youtube_metadata?: YouTubeMetadata;
 }
 
-// === 旧型定義（後方互換性のため保持） ===
-export interface StoryOutline {
-  title: string;
-  food_name: string;
-  hook_content: string;
-  background_content: string;
-  daily_content: string;
-  honeymoon_content: string;
-  deterioration_content: string[];
-  crisis_content: string;
-  learning_content: string;
-  recovery_content: string;
-}
-
-export interface OutlineRequest {
-  food_name: string;
-  model?: string;
-  temperature?: number;
-}
-
-export interface OutlineResponse {
-  outline: StoryOutline;
-  search_results: Record<string, any>;
-  reference_info: string;
-  model: string;
-  temperature: number;
-}
-
 export interface ConversationSegment {
   speaker: string;
   text: string;
@@ -177,10 +151,6 @@ export interface BackgroundCheckFile {
   name: string;
   exists: boolean;
   path?: string | null;
-}
-
-export interface BackgroundCheckRequest {
-  background_names: string[];
 }
 
 export interface BackgroundCheckRequest {
@@ -276,15 +246,17 @@ export interface JsonFileStatusUpdate {
   is_generated: boolean;
 }
 
-// === 旧API型定義（後方互換性） ===
-export interface SectionRequest {
-  outline: StoryOutline;
-  model?: string;
-  temperature?: number;
+// === 背景画像API ===
+export interface BackgroundInfoRequest {
+  theme: string;
+  script_data?: Record<string, unknown>;
+  script_keywords?: string[];
 }
 
-export interface FoodOverconsumptionScript {
-  title: string;
-  food_name: string;
-  sections: VideoSection[];
+export interface BackgroundInfoResponse {
+  theme: string;
+  background_name: string;
+  background_url: string | null;
+  exists: boolean;
+  prompt?: string;
 }

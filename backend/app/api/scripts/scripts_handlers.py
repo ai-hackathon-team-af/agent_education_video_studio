@@ -17,6 +17,8 @@ from .scripts_models import (
     FullScriptResponse,
     ThemeBatchResponse,
     ThemeTitleRequest,
+    BackgroundRequest,
+    BackgroundResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -131,6 +133,8 @@ async def handle_generate_full_script(request: FullScriptRequest) -> FullScriptR
             temperature=request.temperature,
         )
 
+        # 背景画像は台本確認画面で生成する
+
         return FullScriptResponse(script=script)
 
     except HTTPException:
@@ -146,7 +150,7 @@ async def handle_generate_comedy_titles_batch() -> ComedyTitleBatch:
         logger.info("教育動画タイトル量産リクエスト")
 
         from app.core.script_generators.comedy import ComedyScriptGenerator
-        from app.core.script_generators.generate_food_over import create_llm_instance
+        from app.utils.llm_factory import create_llm_from_model_config
         from app.config.models import get_default_model_config
 
         generator = ComedyScriptGenerator()
@@ -156,7 +160,7 @@ async def handle_generate_comedy_titles_batch() -> ComedyTitleBatch:
         model = model_config["id"]
         temperature = 0.9  # 教育動画モードは高めに固定
 
-        llm = create_llm_instance(model, temperature, model_config)
+        llm = create_llm_from_model_config(model_config, temperature)
 
         # タイトル量産
         title_batch = generator.generate_title_batch(llm)
@@ -246,7 +250,7 @@ async def handle_generate_theme_batch() -> ThemeBatchResponse:
         logger.info("テーマ候補生成リクエスト")
 
         from app.core.script_generators.comedy import ComedyScriptGenerator
-        from app.core.script_generators.generate_food_over import create_llm_instance
+        from app.utils.llm_factory import create_llm_from_model_config
         from app.config.models import get_default_model_config
 
         generator = ComedyScriptGenerator()
@@ -255,7 +259,7 @@ async def handle_generate_theme_batch() -> ThemeBatchResponse:
         model = model_config["id"]
         temperature = 0.9
 
-        llm = create_llm_instance(model, temperature, model_config)
+        llm = create_llm_from_model_config(model_config, temperature)
 
         theme_batch = generator.title_generator.generate_theme_batch(llm)
 
@@ -274,7 +278,7 @@ async def handle_generate_theme_titles(request: ThemeTitleRequest) -> ComedyTitl
         logger.info(f"テーマベースタイトル生成リクエスト: {request.theme}")
 
         from app.core.script_generators.comedy import ComedyScriptGenerator
-        from app.core.script_generators.generate_food_over import create_llm_instance
+        from app.utils.llm_factory import create_llm_from_model_config
         from app.config.models import get_default_model_config
 
         generator = ComedyScriptGenerator()
@@ -283,7 +287,7 @@ async def handle_generate_theme_titles(request: ThemeTitleRequest) -> ComedyTitl
         model = request.model or model_config["id"]
         temperature = request.temperature or 0.9
 
-        llm = create_llm_instance(model, temperature, model_config)
+        llm = create_llm_from_model_config(model_config, temperature)
 
         title_batch = generator.title_generator.generate_title_from_theme(
             request.theme, llm
@@ -295,5 +299,86 @@ async def handle_generate_theme_titles(request: ThemeTitleRequest) -> ComedyTitl
         raise
     except Exception as e:
         logger.error(f"テーマベースタイトル生成エラー: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def handle_get_background(request: BackgroundRequest) -> BackgroundResponse:
+    """背景画像情報取得ハンドラー"""
+    try:
+        logger.info(f"背景画像情報取得リクエスト: theme={request.theme}")
+
+        from app.core.asset_generators.background_generator import BackgroundImageGenerator
+        from app.config.resource_config.backgrounds import theme_to_background_name
+        import os
+
+        bg_generator = BackgroundImageGenerator()
+        bg_name = theme_to_background_name(request.theme)
+        exists = bg_generator.check_background_exists(bg_name)
+
+        # 背景URLを生成（存在する場合）
+        background_url = None
+        if exists:
+            bg_path = bg_generator.get_background_path(bg_name)
+            if bg_path:
+                # ファイル名を取得してURL生成
+                filename = os.path.basename(bg_path)
+                background_url = f"/assets/backgrounds/{filename}"
+
+        return BackgroundResponse(
+            theme=request.theme,
+            background_name=bg_name,
+            background_url=background_url,
+            exists=exists,
+        )
+
+    except Exception as e:
+        logger.error(f"背景画像情報取得エラー: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def handle_regenerate_background(request: BackgroundRequest) -> BackgroundResponse:
+    """背景画像生成ハンドラー（台本データから生成）"""
+    try:
+        logger.info(f"背景画像生成リクエスト: theme={request.theme}")
+
+        from app.core.asset_generators.background_generator import BackgroundImageGenerator
+        import os
+
+        if not request.script_data:
+            raise HTTPException(
+                status_code=400,
+                detail="script_data is required for background generation"
+            )
+
+        bg_generator = BackgroundImageGenerator()
+
+        # カスタムプロンプトが指定されている場合はそれを使用
+        if request.custom_prompt:
+            bg_path, used_prompt = bg_generator.generate_background_from_script(
+                request.script_data,
+                custom_prompt=request.custom_prompt
+            )
+        else:
+            bg_path, used_prompt = bg_generator.generate_background_from_script(
+                request.script_data
+            )
+        logger.info(f"背景画像を生成しました: {bg_path}")
+
+        # ファイル名を取得してURL生成
+        filename = os.path.basename(bg_path)
+        bg_name = os.path.splitext(filename)[0]
+
+        return BackgroundResponse(
+            theme=request.theme,
+            background_name=bg_name,
+            background_url=f"/assets/backgrounds/{filename}",
+            exists=True,
+            prompt=used_prompt,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"背景画像生成エラー: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 

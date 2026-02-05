@@ -38,7 +38,9 @@ async def handle_generate_video(request: VideoGenerationRequest) -> VideoGenerat
             sections=sections_dict,
             speed=request.speed,
             pitch=request.pitch,
-            intonation=request.intonation
+            intonation=request.intonation,
+            theme=request.theme,
+            script_data=request.script_data
         )
 
         logger.info(f"動画生成タスク開始: task_id={task.id}")

@@ -1,12 +1,18 @@
+"""ファイル操作ユーティリティモジュール"""
+
 import os
 import uuid
 from datetime import datetime
-from typing import Optional, Dict, Tuple
-from app.utils_legacy.constants import Constants
+from typing import Optional, Dict, Tuple, List
+
 from app.config.app import Paths
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# ファイル関連の定数
+DEFAULT_PREFIX = "output"
+DEFAULT_EXTENSION = "mp4"
 
 
 class FileOperations:
@@ -67,8 +73,8 @@ class FileOperations:
 class FileManager:
     @staticmethod
     def generate_unique_filename(
-        prefix: str = Constants.DEFAULT_PREFIX,
-        extension: str = Constants.DEFAULT_EXTENSION,
+        prefix: str = DEFAULT_PREFIX,
+        extension: str = DEFAULT_EXTENSION,
     ) -> str:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         unique_id = str(uuid.uuid4())[:8]
@@ -133,26 +139,26 @@ class FileManager:
             return None
 
     @staticmethod
-    def cleanup_audio_files(audio_file_list: list[str]) -> int:
+    def cleanup_audio_files(audio_file_list: List[str]) -> int:
         """
         音声ファイルリストを安全に削除する
-        
+
         Args:
             audio_file_list: 削除する音声ファイルのパスリスト
-            
+
         Returns:
             削除に成功したファイル数
         """
         if not audio_file_list:
             return 0
-        
+
         deleted_count = 0
         for audio_path in audio_file_list:
             if audio_path and os.path.exists(audio_path):
                 if FileOperations.delete_file_safe(audio_path, "audio file"):
                     deleted_count += 1
-        
+
         if deleted_count > 0:
             logger.info(f"Cleaned up {deleted_count} audio file(s)")
-        
+
         return deleted_count

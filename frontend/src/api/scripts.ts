@@ -10,11 +10,7 @@ import type {
   FullScriptResponse,
   ComedyTitleBatch,
   ThemeBatch,
-  // 旧型定義（後方互換性）
-  OutlineRequest,
-  OutlineResponse,
-  SectionRequest,
-  FoodOverconsumptionScript,
+  BackgroundInfoResponse,
 } from "@/types";
 
 export const scriptApi = {
@@ -148,31 +144,35 @@ export const scriptApi = {
     return response.data;
   },
 
-  // === 旧API（後方互換性のため保持） ===
+  // === 背景画像API ===
   /**
-   * アウトラインを生成（旧API）
-   * @deprecated 新しいgenerateOutlineを使用してください
+   * テーマに基づく背景画像情報を取得
    */
-  generateOutlineOld: async (
-    data: OutlineRequest
-  ): Promise<OutlineResponse> => {
-    const response = await apiClient.post<OutlineResponse>(
-      "/scripts/outline",
-      data
+  getBackgroundInfo: async (theme: string): Promise<BackgroundInfoResponse> => {
+    const response = await apiClient.post<BackgroundInfoResponse>(
+      "/scripts/background",
+      { theme }
     );
     return response.data;
   },
 
   /**
-   * セクションを生成（旧API）
-   * @deprecated 新しいgenerateScriptを使用してください
+   * テーマに基づく背景画像を再生成
    */
-  generateSections: async (
-    data: SectionRequest
-  ): Promise<FoodOverconsumptionScript> => {
-    const response = await apiClient.post<FoodOverconsumptionScript>(
-      "/scripts/sections",
-      data
+  regenerateBackground: async (
+    theme: string,
+    scriptData?: Record<string, unknown>,
+    scriptKeywords?: string[],
+    customPrompt?: string
+  ): Promise<BackgroundInfoResponse> => {
+    const response = await apiClient.post<BackgroundInfoResponse>(
+      "/scripts/background/regenerate",
+      {
+        theme,
+        script_data: scriptData,
+        script_keywords: scriptKeywords,
+        custom_prompt: customPrompt,
+      }
     );
     return response.data;
   },
