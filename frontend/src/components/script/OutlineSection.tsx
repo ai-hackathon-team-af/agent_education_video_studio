@@ -221,9 +221,8 @@ const OutlineSection = ({
                     variant="ghost"
                     size="sm"
                     aria-label="タグをコピー"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </IconButton>
+                    icon={<Copy className="h-4 w-4" />}
+                  />
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {youtubeMetadata.tags.map((tag, index) => (
@@ -248,9 +247,8 @@ const OutlineSection = ({
                       variant="ghost"
                       size="sm"
                       aria-label="説明文をコピー"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </IconButton>
+                      icon={<Copy className="h-4 w-4" />}
+                    />
                     {youtubeMetadata.description.length > 200 && (
                       <IconButton
                         onClick={() =>
@@ -263,13 +261,14 @@ const OutlineSection = ({
                             ? "説明文を折りたたむ"
                             : "説明文を展開"
                         }
-                      >
-                        {isDescriptionExpanded ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </IconButton>
+                        icon={
+                          isDescriptionExpanded ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )
+                        }
+                      />
                     )}
                   </div>
                 </div>
