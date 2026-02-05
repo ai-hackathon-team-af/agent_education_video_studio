@@ -15,7 +15,7 @@ class SectionContext:
     story_summary: str
     reference_information: str
     previous_sections: List[Dict[str, Any]]
-    # お笑いモード専用
+    # 教育動画モード専用
     character_moods: Optional[Dict[str, int]] = None
     forced_ending_type: Optional[str] = None
     is_final_section: bool = False

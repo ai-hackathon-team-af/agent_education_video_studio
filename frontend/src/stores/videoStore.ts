@@ -152,6 +152,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         enable_subtitles: true,
         conversation_mode: "duo",
         sections: selectedFileData.sections,
+        theme: selectedFileData.theme,
       });
 
       set({

@@ -159,6 +159,8 @@ export const useWizardStore = create<WizardState & WizardActions>((set, get) => 
         sections: generatedScript.sections,
         enable_subtitles: true,
         conversation_mode: "duo",
+        theme: generatedScript.theme,
+        script_data: generatedScript as unknown as Record<string, unknown>,
       });
 
       setTaskId(response.task_id);

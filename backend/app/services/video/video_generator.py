@@ -17,7 +17,7 @@ from app.services.video.video_generator_utils import (
     calculate_section_durations,
 )
 from app.models.scripts.common import VideoSection
-from app.utils_legacy.files import FileManager
+from app.utils.files import FileManager
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +26,12 @@ class VideoGenerator:
     def __init__(self):
         # 口パクデバッグ用: ログレベルを一時的にINFOに設定
         for logger_name in [
-            "src.services.audio_combiner",
-            "src.services.frame_generator",
-            "src.core.video_processor",
-            "src.core.audio_processor",
-            "src.services.bgm_mixer",
-            "config.bgm_library",
+            "app.services.audio_combiner",
+            "app.services.video.frame_generator",
+            "app.core.processors.video_processor",
+            "app.core.processors.audio_processor",
+            "app.services.bgm_mixer",
+            "app.config.resource_config.bgm_library",
         ]:
             logging.getLogger(logger_name).setLevel(logging.INFO)
 
@@ -55,6 +55,8 @@ class VideoGenerator:
         enable_subtitles: bool = True,
         conversation_mode: str = "duo",
         sections: Optional[List[VideoSection]] = None,
+        theme: Optional[str] = None,
+        script_data: Optional[Dict] = None,
     ) -> Optional[str]:
         """会話動画生成（メイン機能）"""
         if not output_path:
@@ -66,7 +68,9 @@ class VideoGenerator:
 
         try:
             character_images = self.resource_manager.load_character_images()
-            backgrounds = self.resource_manager.load_backgrounds()
+            backgrounds = self.resource_manager.load_backgrounds(
+                theme=theme, script_data=script_data
+            )
             item_images = self.resource_manager.load_item_images()
 
             if not self.resource_manager.validate_resources(

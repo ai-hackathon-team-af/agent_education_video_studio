@@ -1,7 +1,7 @@
 """台本生成APIのリクエスト/レスポンスモデル"""
 
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from app.models.script_models import (
     ScriptMode,
@@ -18,7 +18,7 @@ class TitleRequest(BaseModel):
     """タイトル生成リクエスト"""
 
     mode: ScriptMode = Field(default=ScriptMode.COMEDY, description="生成モード（comedyのみ）")
-    input_text: str = Field(..., description="漫談のテーマ")
+    input_text: str = Field(..., description="授業のテーマ")
     model: Optional[str] = Field(None, description="使用するLLMモデルID")
     temperature: Optional[float] = Field(None, description="生成温度")
 
@@ -74,7 +74,7 @@ class FullScriptRequest(BaseModel):
     """完全台本生成リクエスト（3段階一括）"""
 
     mode: ScriptMode = Field(default=ScriptMode.COMEDY, description="生成モード（comedyのみ）")
-    input_text: str = Field(..., description="漫談のテーマ")
+    input_text: str = Field(..., description="授業のテーマ")
     model: Optional[str] = Field(None, description="使用するLLMモデルID")
     temperature: Optional[float] = Field(None, description="生成温度")
 
@@ -97,4 +97,29 @@ class ThemeTitleRequest(BaseModel):
     theme: str = Field(..., description="テーマ（単語・フレーズ）")
     model: Optional[str] = Field(None, description="使用するLLMモデル")
     temperature: Optional[float] = Field(None, description="生成温度")
+
+
+class BackgroundRequest(BaseModel):
+    """背景画像リクエスト"""
+
+    theme: str = Field(..., description="テーマ文字列")
+    script_data: Optional[Dict[str, Any]] = Field(
+        None, description="台本データ（キーワード抽出用、オプション）"
+    )
+    script_keywords: Optional[List[str]] = Field(
+        None, description="台本から抽出したキーワード（オプション）"
+    )
+    custom_prompt: Optional[str] = Field(
+        None, description="カスタムプロンプト（指定時は台本からの自動生成をスキップ）"
+    )
+
+
+class BackgroundResponse(BaseModel):
+    """背景画像レスポンス"""
+
+    theme: str = Field(..., description="テーマ文字列")
+    background_name: str = Field(..., description="背景ファイル名（拡張子なし）")
+    background_url: Optional[str] = Field(None, description="背景画像URL")
+    exists: bool = Field(..., description="背景画像が存在するか")
+    prompt: Optional[str] = Field(None, description="使用されたプロンプト")
 
