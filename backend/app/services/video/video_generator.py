@@ -17,7 +17,7 @@ from app.services.video.video_generator_utils import (
     calculate_section_durations,
 )
 from app.models.scripts.common import VideoSection
-from app.utils_legacy.files import FileManager
+from app.utils.files import FileManager
 
 logger = logging.getLogger(__name__)
 
