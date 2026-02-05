@@ -17,7 +17,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./assets:/app/assets:ro
+      - ./assets:/app/assets
       - ./outputs:/app/outputs
       - ./temp:/app/temp
     env_file:
@@ -46,7 +46,7 @@ services:
     build: ./backend
     command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
     volumes:
-      - ./assets:/app/assets:ro
+      - ./assets:/app/assets
       - ./outputs:/app/outputs
       - ./temp:/app/temp
     env_file:
