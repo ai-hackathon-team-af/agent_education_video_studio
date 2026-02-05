@@ -185,10 +185,6 @@ export interface BackgroundCheckRequest {
   background_names: string[];
 }
 
-export interface BackgroundCheckRequest {
-  background_names: string[];
-}
-
 export interface BackgroundCheckResponse {
   total: number;
   available: number;
