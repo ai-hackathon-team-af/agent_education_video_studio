@@ -13,9 +13,20 @@ app = FastAPI(
     version="2.0.0",
 )
 
+# CORS設定: 環境変数から許可オリジンを取得
+# ALLOWED_ORIGINS: カンマ区切りで複数指定可能 (例: "http://localhost:3000,https://example.com")
+default_origins = ["http://localhost:3000", "http://localhost:5173"]
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+if allowed_origins_env:
+    allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+else:
+    allowed_origins = default_origins
+
+logger.info(f"CORS allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
