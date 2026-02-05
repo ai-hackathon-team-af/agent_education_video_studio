@@ -15,7 +15,8 @@ import {
 import { useWizardStore } from "@/stores/wizardStore";
 import { scriptApi } from "@/api/scripts";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+// Assets are served from the same origin, so use relative URLs
+const ASSETS_BASE_URL = "";
 
 const ReviewScreen = () => {
   const {
@@ -57,7 +58,7 @@ const ReviewScreen = () => {
         generatedScript as unknown as Record<string, unknown>
       );
       if (response.exists && response.background_url) {
-        setBackgroundUrl(`${API_BASE_URL}${response.background_url}?t=${Date.now()}`);
+        setBackgroundUrl(`${ASSETS_BASE_URL}${response.background_url}?t=${Date.now()}`);
       }
       // プロンプトを保存
       if (response.prompt) {
@@ -93,7 +94,7 @@ const ReviewScreen = () => {
       if (response.exists && response.background_url) {
         // キャッシュ回避のためにタイムスタンプを追加
         setBackgroundUrl(
-          `${API_BASE_URL}${response.background_url}?t=${Date.now()}`
+          `${ASSETS_BASE_URL}${response.background_url}?t=${Date.now()}`
         );
       }
       // プロンプトを更新
