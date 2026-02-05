@@ -150,7 +150,7 @@ async def handle_generate_comedy_titles_batch() -> ComedyTitleBatch:
         logger.info("教育動画タイトル量産リクエスト")
 
         from app.core.script_generators.comedy import ComedyScriptGenerator
-        from app.core.script_generators.generate_food_over import create_llm_instance
+        from app.utils.llm_factory import create_llm_from_model_config
         from app.config.models import get_default_model_config
 
         generator = ComedyScriptGenerator()
@@ -160,7 +160,7 @@ async def handle_generate_comedy_titles_batch() -> ComedyTitleBatch:
         model = model_config["id"]
         temperature = 0.9  # 教育動画モードは高めに固定
 
-        llm = create_llm_instance(model, temperature, model_config)
+        llm = create_llm_from_model_config(model_config, temperature)
 
         # タイトル量産
         title_batch = generator.generate_title_batch(llm)
@@ -250,7 +250,7 @@ async def handle_generate_theme_batch() -> ThemeBatchResponse:
         logger.info("テーマ候補生成リクエスト")
 
         from app.core.script_generators.comedy import ComedyScriptGenerator
-        from app.core.script_generators.generate_food_over import create_llm_instance
+        from app.utils.llm_factory import create_llm_from_model_config
         from app.config.models import get_default_model_config
 
         generator = ComedyScriptGenerator()
@@ -259,7 +259,7 @@ async def handle_generate_theme_batch() -> ThemeBatchResponse:
         model = model_config["id"]
         temperature = 0.9
 
-        llm = create_llm_instance(model, temperature, model_config)
+        llm = create_llm_from_model_config(model_config, temperature)
 
         theme_batch = generator.title_generator.generate_theme_batch(llm)
 
@@ -278,7 +278,7 @@ async def handle_generate_theme_titles(request: ThemeTitleRequest) -> ComedyTitl
         logger.info(f"テーマベースタイトル生成リクエスト: {request.theme}")
 
         from app.core.script_generators.comedy import ComedyScriptGenerator
-        from app.core.script_generators.generate_food_over import create_llm_instance
+        from app.utils.llm_factory import create_llm_from_model_config
         from app.config.models import get_default_model_config
 
         generator = ComedyScriptGenerator()
@@ -287,7 +287,7 @@ async def handle_generate_theme_titles(request: ThemeTitleRequest) -> ComedyTitl
         model = request.model or model_config["id"]
         temperature = request.temperature or 0.9
 
-        llm = create_llm_instance(model, temperature, model_config)
+        llm = create_llm_from_model_config(model_config, temperature)
 
         title_batch = generator.title_generator.generate_title_from_theme(
             request.theme, llm
@@ -352,8 +352,16 @@ async def handle_regenerate_background(request: BackgroundRequest) -> Background
 
         bg_generator = BackgroundImageGenerator()
 
-        # 台本データから背景を生成
-        bg_path = bg_generator.generate_background_from_script(request.script_data)
+        # カスタムプロンプトが指定されている場合はそれを使用
+        if request.custom_prompt:
+            bg_path, used_prompt = bg_generator.generate_background_from_script(
+                request.script_data,
+                custom_prompt=request.custom_prompt
+            )
+        else:
+            bg_path, used_prompt = bg_generator.generate_background_from_script(
+                request.script_data
+            )
         logger.info(f"背景画像を生成しました: {bg_path}")
 
         # ファイル名を取得してURL生成
@@ -365,6 +373,7 @@ async def handle_regenerate_background(request: BackgroundRequest) -> Background
             background_name=bg_name,
             background_url=f"/assets/backgrounds/{filename}",
             exists=True,
+            prompt=used_prompt,
         )
 
     except HTTPException:
