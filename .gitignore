@@ -109,10 +109,16 @@ tmp/
 
 # 大容量データファイル
 *.csv
-*.json
 data/
 dataset/
 checkpoints/
+
+# JSON files (except frontend config)
+*.json
+!frontend/package.json
+!frontend/package-lock.json
+!frontend/tsconfig.json
+!frontend/tsconfig.node.json
 
 # Jupyter Notebook
 .ipynb_checkpoints/
