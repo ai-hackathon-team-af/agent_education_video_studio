@@ -15,7 +15,7 @@ class AppConfig:
     page_icon: str = "📕"
     layout: str = "wide"
 
-    fps: int = 30
+    fps: int = 15
     resolution: Tuple[int, int] = (1280, 720)
 
     default_speed: float = 1.0
