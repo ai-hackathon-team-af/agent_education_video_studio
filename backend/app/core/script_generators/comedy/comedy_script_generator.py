@@ -8,6 +8,7 @@ from typing import Dict, List, Any, Optional, Callable, Tuple
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.exceptions import OutputParserException
+from pydantic import ValidationError
 
 from app.models.script_models import (
     ScriptMode,
@@ -126,10 +127,10 @@ class ComedyScriptGenerator:
                     fixed_response = AIMessage(content=fixed_content)
                     return parser.invoke(fixed_response)
 
-            except (OutputParserException, json.JSONDecodeError, ValueError) as e:
+            except (OutputParserException, json.JSONDecodeError, ValueError, ValidationError) as e:
                 last_error = e
                 if attempt < max_retries:
-                    logger.warning(f"パースエラー (試行 {attempt + 1}): {str(e)}")
+                    logger.warning(f"パースエラー (試行 {attempt + 1}): {str(e)[:200]}")
                     continue
                 else:
                     logger.error(f"パースエラー: 最大試行回数に達しました")
