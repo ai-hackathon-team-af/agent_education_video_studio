@@ -61,11 +61,19 @@ class ComedyScriptGenerator:
         """機嫌レベルから説明文を生成（後方互換性のため）"""
         return self.mood_generator.get_mood_description(character, mood)
 
-    def fix_json_quotes(self, text: str) -> str:
-        """JSON文字列内の未エスケープされた二重引用符を修正する"""
+    def fix_json(self, text: str) -> str:
+        """JSON文字列の問題を修正する（無効エスケープ・未エスケープ引用符）"""
         text = re.sub(r"```json\s*", "", text)
         text = re.sub(r"```\s*$", "", text, flags=re.MULTILINE)
         text = text.strip()
+
+        # 無効なエスケープシーケンスを修正
+        valid_escapes = set('"\\/bfnrtu')
+        text = re.sub(
+            r'\\(.)',
+            lambda m: m.group(0) if m.group(1) in valid_escapes else m.group(1),
+            text
+        )
 
         result = []
         i = 0
@@ -122,7 +130,7 @@ class ComedyScriptGenerator:
                     logger.warning(
                         f"JSONパースエラー、修正を試みます (試行 {attempt + 1}/{max_retries + 1})"
                     )
-                    fixed_content = self.fix_json_quotes(content)
+                    fixed_content = self.fix_json(content)
 
                     fixed_response = AIMessage(content=fixed_content)
                     return parser.invoke(fixed_response)
