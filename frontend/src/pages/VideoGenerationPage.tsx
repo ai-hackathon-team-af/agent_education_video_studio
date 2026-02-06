@@ -16,15 +16,13 @@ import {
   Film,
 } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
 // 動画パスからURLを生成
 const getVideoUrl = (videoPath: string): string => {
   // 絶対パスの場合はファイル名のみを抽出
   const filename = videoPath.includes("/") || videoPath.includes("\\")
     ? videoPath.split(/[/\\]/).pop() || videoPath
     : videoPath;
-  return `${API_BASE_URL}/outputs/${filename}`;
+  return `/outputs/${filename}`;
 };
 
 const VideoGenerationPage = () => {
