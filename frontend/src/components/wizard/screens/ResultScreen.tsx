@@ -10,8 +10,6 @@ import {
 } from "lucide-react";
 import { useWizardStore } from "@/stores/wizardStore";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
 const ResultScreen = () => {
   const { videoPath, aiOptimizations, generatedScript, setStep: _setStep, reset, resetToStep } =
     useWizardStore();
@@ -30,7 +28,7 @@ const ResultScreen = () => {
   const handleDownload = () => {
     if (videoPath) {
       const link = document.createElement("a");
-      link.href = `${API_BASE_URL}${videoPath}`;
+      link.href = videoPath;
       link.download = generatedScript?.title || "generated-video.mp4";
       document.body.appendChild(link);
       link.click();
@@ -38,7 +36,7 @@ const ResultScreen = () => {
     }
   };
 
-  const videoUrl = videoPath ? `${API_BASE_URL}${videoPath}` : null;
+  const videoUrl = videoPath || null;
 
   return (
     <div className="max-w-5xl mx-auto py-12 px-6">
