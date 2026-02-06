@@ -1,11 +1,15 @@
 """汎用セクションジェネレーター（両モード共通）"""
 
+import json
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.exceptions import OutputParserException
+from pydantic import ValidationError
 
 from app.models.script_models import VideoSection, SectionDefinition, ScriptMode
 from app.config.resource_config.bgm_library import (
@@ -52,6 +56,84 @@ class GenericSectionGenerator:
     def build_context_text(self, context: SectionContext) -> str:
         """コンテキスト情報をテキスト化する"""
         return build_context_text(context, self.mode)
+
+    def _fix_json_quotes(self, text: str) -> str:
+        """JSON文字列内の未エスケープされた二重引用符を修正する"""
+        text = re.sub(r"```json\s*", "", text)
+        text = re.sub(r"```\s*$", "", text, flags=re.MULTILINE)
+        text = text.strip()
+
+        result = []
+        i = 0
+        in_string = False
+        escaped = False
+
+        while i < len(text):
+            char = text[i]
+
+            if escaped:
+                result.append(char)
+                escaped = False
+            elif char == "\\":
+                result.append(char)
+                escaped = True
+            elif char == '"':
+                if not in_string:
+                    in_string = True
+                    result.append(char)
+                else:
+                    if i + 1 < len(text):
+                        next_char = text[i + 1]
+                        if next_char in [",", "}", "]", ":", " ", "\t", "\n", "\r"]:
+                            in_string = False
+                            result.append(char)
+                        else:
+                            result.append('\\"')
+                    else:
+                        in_string = False
+                        result.append(char)
+            else:
+                result.append(char)
+
+            i += 1
+
+        return "".join(result)
+
+    def _parse_with_retry(
+        self, parser: PydanticOutputParser, llm_response: Any, max_retries: int = 2
+    ) -> Any:
+        """パースをリトライ付きで実行する"""
+        last_error = None
+
+        for attempt in range(max_retries + 1):
+            try:
+                if attempt == 0:
+                    return parser.invoke(llm_response)
+                else:
+                    if hasattr(llm_response, "content"):
+                        content = llm_response.content
+                    else:
+                        content = str(llm_response)
+
+                    logger.warning(
+                        f"JSONパースエラー、修正を試みます (試行 {attempt + 1}/{max_retries + 1})"
+                    )
+                    fixed_content = self._fix_json_quotes(content)
+                    fixed_response = AIMessage(content=fixed_content)
+                    return parser.invoke(fixed_response)
+
+            except (OutputParserException, json.JSONDecodeError, ValueError, ValidationError) as e:
+                last_error = e
+                if attempt < max_retries:
+                    logger.warning(f"パースエラー (試行 {attempt + 1}): {str(e)[:200]}")
+                    continue
+                else:
+                    logger.error(f"パースエラー: 最大試行回数に達しました")
+                    raise
+
+        if last_error:
+            raise last_error
+        raise ValueError("パースに失敗しました")
 
     def generate(self, context: SectionContext, llm: Any) -> VideoSection:
         """セクションを生成する
@@ -118,8 +200,8 @@ class GenericSectionGenerator:
                     '"text_for_voivevox"', '"text_for_voicevox"'
                 )
 
-            # LLMの応答をパース
-            section = parser.invoke(llm_response)
+            # LLMの応答をパース（リトライ付き）
+            section = self._parse_with_retry(parser, llm_response)
 
             # セクションキーを設定
             section.section_key = context.section_definition.section_key
