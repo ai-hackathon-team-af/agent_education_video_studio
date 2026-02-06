@@ -57,11 +57,20 @@ class GenericSectionGenerator:
         """コンテキスト情報をテキスト化する"""
         return build_context_text(context, self.mode)
 
-    def _fix_json_quotes(self, text: str) -> str:
-        """JSON文字列内の未エスケープされた二重引用符を修正する"""
+    def _fix_json(self, text: str) -> str:
+        """JSON文字列の問題を修正する（無効エスケープ・未エスケープ引用符）"""
         text = re.sub(r"```json\s*", "", text)
         text = re.sub(r"```\s*$", "", text, flags=re.MULTILINE)
         text = text.strip()
+
+        # 無効なエスケープシーケンスを修正
+        # JSONで有効: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
+        valid_escapes = set('"\\/bfnrtu')
+        text = re.sub(
+            r'\\(.)',
+            lambda m: m.group(0) if m.group(1) in valid_escapes else m.group(1),
+            text
+        )
 
         result = []
         i = 0
@@ -118,7 +127,7 @@ class GenericSectionGenerator:
                     logger.warning(
                         f"JSONパースエラー、修正を試みます (試行 {attempt + 1}/{max_retries + 1})"
                     )
-                    fixed_content = self._fix_json_quotes(content)
+                    fixed_content = self._fix_json(content)
                     fixed_response = AIMessage(content=fixed_content)
                     return parser.invoke(fixed_response)
 
