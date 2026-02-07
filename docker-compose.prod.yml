@@ -13,6 +13,7 @@ services:
 
   backend:
     build: ./backend
+    image: zundan-studio-backend:latest
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
     ports:
       - "8000:8000"
@@ -43,7 +44,7 @@ services:
       start_period: 40s
 
   celery-worker:
-    build: ./backend
+    image: zundan-studio-backend:latest
     command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
     volumes:
       - ./assets:/app/assets
