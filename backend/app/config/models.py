@@ -5,8 +5,8 @@ from typing import List, Dict, Any
 # 利用可能なAIモデルの設定
 AVAILABLE_MODELS: List[Dict[str, Any]] = [
     {
-        "id": "gemini-2.0-flash",
-        "name": "Gemini 2.0 Flash",
+        "id": "gemini-3-flash-preview",
+        "name": "Gemini 3 Flash",
         "provider": "google",
         "temperature_range": (0.0, 2.0),
         "default_temperature": 1.0,
@@ -34,7 +34,7 @@ AVAILABLE_MODELS: List[Dict[str, Any]] = [
 ]
 
 # デフォルトモデル設定
-DEFAULT_MODEL_ID = "gemini-2.0-flash"
+DEFAULT_MODEL_ID = "gemini-3-flash-preview"
 
 
 # モデル設定を取得する関数
