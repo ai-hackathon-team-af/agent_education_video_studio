@@ -35,10 +35,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* Logo */}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-md">
-                <span className="text-white font-bold text-lg">ず</span>
+                <span className="text-white font-bold text-lg">T</span>
               </div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-white hidden sm:block">
-                ずんだもん台本生成スタジオ
+                Tasuke
               </h1>
             </div>
 
@@ -68,7 +68,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="container mx-auto px-4 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              © 2024 Zundan Studio. Powered by React + FastAPI
+              © 2024 Tasuke. Powered by React + FastAPI
             </p>
             <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-500">
               <span>v2.0.0</span>
