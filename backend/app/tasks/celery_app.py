@@ -4,7 +4,7 @@ import os
 
 # Celeryアプリケーションの作成
 celery_app = Celery(
-    'zundan_studio',
+    'tasuke',
     broker=os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0'),
     backend=os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
 )

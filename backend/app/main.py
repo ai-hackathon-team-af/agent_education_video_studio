@@ -8,8 +8,8 @@ from app.config import Paths
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="Zundan Studio API",
-    description="API for Zundamon video generation",
+    title="Tasuke API",
+    description="API for Tasuke video generation",
     version="2.0.0",
 )
 
@@ -35,12 +35,12 @@ app.add_middleware(
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "zundan-studio-api"}
+    return {"status": "healthy", "service": "tasuke-api"}
 
 
 @app.get("/")
 async def root():
-    return {"message": "Zundan Studio API", "version": "2.0.0", "docs": "/docs"}
+    return {"message": "Tasuke API", "version": "2.0.0", "docs": "/docs"}
 
 
 outputs_dir = Paths.get_outputs_dir()

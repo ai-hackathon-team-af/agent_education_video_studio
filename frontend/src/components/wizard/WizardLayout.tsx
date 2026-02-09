@@ -18,7 +18,7 @@ const WizardLayout = ({ currentStep, children }: WizardLayoutProps) => {
               <Cpu className="text-white" size={20} />
             </div>
             <span className="font-black text-xl tracking-tight text-slate-800">
-              AI Teacher's Assistant
+              Tasuke
             </span>
           </div>
 
