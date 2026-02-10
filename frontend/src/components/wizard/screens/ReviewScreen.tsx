@@ -11,6 +11,8 @@ import {
   Edit3,
   ChevronDown,
   ChevronUp,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import { useWizardStore } from "@/stores/wizardStore";
 import { scriptApi } from "@/api/scripts";
@@ -25,6 +27,9 @@ const ReviewScreen = () => {
     isProcessing,
     setStep,
     startVideoGeneration,
+    updateSegment,
+    addSegment,
+    deleteSegment,
   } = useWizardStore();
 
   // 背景画像の状態
@@ -38,6 +43,9 @@ const ReviewScreen = () => {
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
   const [editedPrompt, setEditedPrompt] = useState<string>("");
   const [showPromptEditor, setShowPromptEditor] = useState(false);
+
+  // 台本編集モード
+  const [isEditingScript, setIsEditingScript] = useState(false);
 
   const goBack = () => setStep(1);
 
@@ -291,8 +299,21 @@ const ReviewScreen = () => {
 
         {/* Right: AI Generated Script */}
         <div className="bg-white rounded-2xl p-6 border-2 border-blue-100 overflow-y-auto relative shadow-sm">
-          <div className="flex items-center gap-2 mb-6 text-blue-600 text-sm font-bold uppercase tracking-wider">
-            <Cpu size={16} /> AI生成台本
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2 text-blue-600 text-sm font-bold uppercase tracking-wider">
+              <Cpu size={16} /> AI生成台本
+            </div>
+            <button
+              onClick={() => setIsEditingScript(!isEditingScript)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${
+                isEditingScript
+                  ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              <Edit3 size={14} />
+              {isEditingScript ? "編集を終了" : "台本を編集"}
+            </button>
           </div>
 
           {/* Script Title */}
@@ -308,28 +329,92 @@ const ReviewScreen = () => {
           {/* Script Sections */}
           <div className="space-y-6">
             {generatedScript.sections.map((section, sectionIndex) => (
-              <div key={sectionIndex} className="border-l-2 border-slate-200 pl-4">
+              <div key={sectionIndex} className={`border-l-2 ${isEditingScript ? "border-blue-200" : "border-slate-200"} pl-4`}>
                 <p className="text-sm font-bold text-slate-500 mb-3">
                   {section.section_name}
                 </p>
-                {section.segments.map((segment, segmentIndex) => (
-                  <div key={segmentIndex} className="mb-4">
-                    <div className="flex gap-4">
-                      <div className="w-16 text-slate-400 text-xs font-mono pt-1 flex-shrink-0">
-                        {segment.speaker === "ずんだもん" ? "🟢" : "🔵"}{" "}
-                        {segment.speaker}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-slate-800">{segment.text}</p>
-                        {segment.expression && segment.expression !== "normal" && (
-                          <p className="text-xs text-slate-400 mt-1">
-                            表情: {segment.expression}
-                          </p>
+                {section.segments.map((segment, segmentIndex) =>
+                  isEditingScript ? (
+                    <div key={segmentIndex} className="mb-3 bg-slate-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <select
+                          value={segment.speaker}
+                          onChange={(e) =>
+                            updateSegment(sectionIndex, segmentIndex, {
+                              speaker: e.target.value,
+                            })
+                          }
+                          className="text-xs px-2 py-1 border border-slate-200 rounded-md bg-white focus:ring-1 focus:ring-blue-400 outline-none"
+                        >
+                          <option value="ずんだもん">ずんだもん</option>
+                          <option value="めたん">めたん</option>
+                          <option value="つむぎ">つむぎ</option>
+                        </select>
+                        <select
+                          value={segment.expression}
+                          onChange={(e) =>
+                            updateSegment(sectionIndex, segmentIndex, {
+                              expression: e.target.value,
+                            })
+                          }
+                          className="text-xs px-2 py-1 border border-slate-200 rounded-md bg-white focus:ring-1 focus:ring-blue-400 outline-none"
+                        >
+                          <option value="normal">normal</option>
+                          <option value="happy">happy</option>
+                          <option value="angry">angry</option>
+                          <option value="sad">sad</option>
+                          <option value="surprised">surprised</option>
+                        </select>
+                        <div className="flex-1" />
+                        {section.segments.length > 1 && (
+                          <button
+                            onClick={() => deleteSegment(sectionIndex, segmentIndex)}
+                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                            title="このセリフを削除"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         )}
                       </div>
+                      <textarea
+                        value={segment.text}
+                        onChange={(e) =>
+                          updateSegment(sectionIndex, segmentIndex, {
+                            text: e.target.value,
+                          })
+                        }
+                        rows={2}
+                        className="w-full text-sm text-slate-800 border border-slate-200 rounded-md p-2 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none resize-none bg-white"
+                      />
+                      <div className="flex justify-center mt-1">
+                        <button
+                          onClick={() => addSegment(sectionIndex, segmentIndex)}
+                          className="text-xs text-slate-400 hover:text-blue-500 hover:bg-blue-50 px-2 py-0.5 rounded transition-colors flex items-center gap-1"
+                          title="この下にセリフを追加"
+                        >
+                          <Plus size={12} /> セリフ追加
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ) : (
+                    <div key={segmentIndex} className="mb-4">
+                      <div className="flex gap-4">
+                        <div className="w-16 text-slate-400 text-xs font-mono pt-1 flex-shrink-0">
+                          {segment.speaker === "ずんだもん" ? "🟢" : "🔵"}{" "}
+                          {segment.speaker}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-slate-800">{segment.text}</p>
+                          {segment.expression && segment.expression !== "normal" && (
+                            <p className="text-xs text-slate-400 mt-1">
+                              表情: {segment.expression}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                )}
               </div>
             ))}
           </div>
