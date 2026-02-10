@@ -1,40 +1,39 @@
 """動画生成ユーティリティ関数"""
 
 import os
+import subprocess
+import logging
 from typing import List, Dict
-from moviepy import VideoFileClip
 from app.models.scripts.common import VideoSection
+
+logger = logging.getLogger(__name__)
 
 
 def combine_video_with_audio(
     temp_video_path: str, combined_audio, output_path: str
 ) -> str:
-    """動画と音声を結合する"""
-    video_clip = VideoFileClip(temp_video_path)
+    """動画と音声を結合する（ffmpegで映像ストリームコピー）"""
+    temp_audio_path = temp_video_path.replace("_temp.mp4", "_temp_audio.wav")
+    combined_audio.write_audiofile(temp_audio_path, fps=44100, logger=None)
 
-    video_duration = video_clip.duration
-    audio_duration = combined_audio.duration
-    duration_diff = abs(video_duration - audio_duration)
-
-    if duration_diff > 0.001:
-        video_clip = video_clip.with_duration(audio_duration)
-
-    final_clip = video_clip.with_audio(combined_audio)
-
-    final_clip.write_videofile(
-        output_path,
-        codec="libx264",
-        audio_codec="aac",
-        temp_audiofile="temp-audio.m4a",
-        remove_temp=True,
-        ffmpeg_params=["-crf", "23", "-preset", "ultrafast", "-movflags", "+faststart"],
-    )
-
-    video_clip.close()
-    final_clip.close()
-
-    del video_clip
-    del final_clip
+    try:
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", temp_video_path,
+            "-i", temp_audio_path,
+            "-c:v", "copy",
+            "-c:a", "aac",
+            "-movflags", "+faststart",
+            "-shortest",
+            output_path,
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        if result.returncode != 0:
+            logger.error(f"ffmpeg failed: {result.stderr}")
+            raise RuntimeError(f"ffmpeg failed with return code {result.returncode}")
+    finally:
+        if os.path.exists(temp_audio_path):
+            os.remove(temp_audio_path)
 
     return output_path
 

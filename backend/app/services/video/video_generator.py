@@ -2,8 +2,6 @@ import os
 import logging
 import gc
 from typing import List, Dict, Optional
-from moviepy import VideoFileClip
-
 from app.config.app import Paths
 from app.core.processors.audio_processor import AudioProcessor
 from app.core.processors.video_processor import VideoProcessor
