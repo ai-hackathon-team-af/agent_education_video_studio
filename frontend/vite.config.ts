@@ -25,6 +25,14 @@ export default defineConfig({
         target: "ws://backend:8000",
         ws: true,
       },
+      "/assets": {
+        target: "http://backend:8000",
+        changeOrigin: true,
+      },
+      "/outputs": {
+        target: "http://backend:8000",
+        changeOrigin: true,
+      },
     },
   },
 });
