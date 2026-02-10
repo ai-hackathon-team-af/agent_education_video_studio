@@ -115,6 +115,26 @@ export const useWizardStore = create<WizardState & WizardActions>((set, get) => 
           if (updates.text !== undefined && !updates.text_for_voicevox) {
             updated.text_for_voicevox = updates.text;
           }
+          // speaker変更時はvisible_charactersとcharacter_expressionsも同期
+          if (updates.speaker !== undefined) {
+            const newSpeaker = updates.speaker;
+            const expression = updated.expression || "normal";
+            // visible_charactersに新しい話者を含める（デュオ: 話者 + もう1人）
+            const otherChar = newSpeaker === "ずんだもん" ? "めたん" : "ずんだもん";
+            updated.visible_characters = [newSpeaker, otherChar];
+            // character_expressionsを更新
+            updated.character_expressions = {
+              [newSpeaker]: expression,
+              [otherChar]: updated.character_expressions?.[otherChar] || "normal",
+            };
+          }
+          // expression変更時はcharacter_expressionsも同期
+          if (updates.expression !== undefined && updated.character_expressions) {
+            updated.character_expressions = {
+              ...updated.character_expressions,
+              [updated.speaker]: updates.expression,
+            };
+          }
           return updated;
         }),
       };
