@@ -21,7 +21,7 @@ def combine_video_with_audio(
             "ffmpeg", "-y",
             "-i", temp_video_path,
             "-i", temp_audio_path,
-            "-c:v", "copy",
+            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23",
             "-c:a", "aac",
             "-movflags", "+faststart",
             "-shortest",
