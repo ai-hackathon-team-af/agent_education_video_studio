@@ -100,6 +100,88 @@ export const useWizardStore = create<WizardState & WizardActions>((set, get) => 
   setGeneratedScript: (script: ComedyScript | null) =>
     set({ generatedScript: script }),
 
+  updateSegment: (sectionIndex: number, segmentIndex: number, updates: Partial<import("@/types").ConversationSegment>) => {
+    const { generatedScript } = get();
+    if (!generatedScript) return;
+
+    const newSections = generatedScript.sections.map((section, si) => {
+      if (si !== sectionIndex) return section;
+      return {
+        ...section,
+        segments: section.segments.map((seg, sgi) => {
+          if (sgi !== segmentIndex) return seg;
+          const updated = { ...seg, ...updates };
+          // text変更時はtext_for_voicevoxも同期
+          if (updates.text !== undefined && !updates.text_for_voicevox) {
+            updated.text_for_voicevox = updates.text;
+          }
+          return updated;
+        }),
+      };
+    });
+
+    set({
+      generatedScript: {
+        ...generatedScript,
+        sections: newSections,
+        all_segments: newSections.flatMap((s) => s.segments),
+      },
+    });
+  },
+
+  addSegment: (sectionIndex: number, afterSegmentIndex: number) => {
+    const { generatedScript } = get();
+    if (!generatedScript) return;
+
+    const newSegment: import("@/types").ConversationSegment = {
+      speaker: "ずんだもん",
+      text: "",
+      text_for_voicevox: "",
+      expression: "normal",
+      visible_characters: ["ずんだもん", "めたん"],
+      character_expressions: { ずんだもん: "normal", めたん: "normal" },
+    };
+
+    const newSections = generatedScript.sections.map((section, si) => {
+      if (si !== sectionIndex) return section;
+      const newSegments = [...section.segments];
+      newSegments.splice(afterSegmentIndex + 1, 0, newSegment);
+      return { ...section, segments: newSegments };
+    });
+
+    set({
+      generatedScript: {
+        ...generatedScript,
+        sections: newSections,
+        all_segments: newSections.flatMap((s) => s.segments),
+      },
+    });
+  },
+
+  deleteSegment: (sectionIndex: number, segmentIndex: number) => {
+    const { generatedScript } = get();
+    if (!generatedScript) return;
+
+    const section = generatedScript.sections[sectionIndex];
+    if (!section || section.segments.length <= 1) return;
+
+    const newSections = generatedScript.sections.map((s, si) => {
+      if (si !== sectionIndex) return s;
+      return {
+        ...s,
+        segments: s.segments.filter((_, sgi) => sgi !== segmentIndex),
+      };
+    });
+
+    set({
+      generatedScript: {
+        ...generatedScript,
+        sections: newSections,
+        all_segments: newSections.flatMap((s) => s.segments),
+      },
+    });
+  },
+
   generateScript: async () => {
     const { originalText, grade, subject } = get();
     set({ isProcessing: true, error: null });

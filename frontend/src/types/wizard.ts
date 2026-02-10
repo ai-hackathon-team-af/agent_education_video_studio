@@ -1,5 +1,5 @@
 // ウィザード用型定義
-import type { ComedyScript } from "./index";
+import type { ComedyScript, ConversationSegment } from "./index";
 
 // ステップ定義（1-4）
 export type WizardStep = 1 | 2 | 3 | 4;
@@ -70,6 +70,9 @@ export interface WizardActions {
   setOriginalText: (text: string) => void;
   setGeneratedScript: (script: ComedyScript | null) => void;
   generateScript: () => Promise<void>;
+  updateSegment: (sectionIndex: number, segmentIndex: number, updates: Partial<ConversationSegment>) => void;
+  addSegment: (sectionIndex: number, afterSegmentIndex: number) => void;
+  deleteSegment: (sectionIndex: number, segmentIndex: number) => void;
 
   // LoadingScreen
   addLoadingLog: (message: string) => void;
