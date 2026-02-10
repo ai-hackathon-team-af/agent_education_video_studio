@@ -2,7 +2,8 @@ import requests
 import json
 import os
 import logging
-from typing import Dict, Any, Optional, List
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Dict, Any, Optional, List, Tuple
 from app.config import Characters
 
 logger = logging.getLogger(__name__)
@@ -124,6 +125,67 @@ class VoiceGenerator:
             logger.error(f"Failed to save audio file: {e}")
             return None
 
+    def _prepare_voice_task(
+        self,
+        i: int,
+        conv: Dict,
+        speed: float,
+        pitch: float,
+        intonation: float,
+        output_dir: str,
+    ) -> Optional[Tuple[int, str, float, float, float, str, str]]:
+        """会話アイテムから音声生成タスクのパラメータを準備する"""
+        speaker = conv.get("speaker", "zundamon")
+        text = conv.get("text_for_voicevox", conv.get("text", "")).strip()
+
+        if not text:
+            return None
+
+        characters = Characters.get_all()
+        char_config = characters.get(speaker)
+        expression = conv.get("expression", "normal")
+
+        if char_config and expression in char_config.expression_voice_map:
+            final_speed = char_config.expression_voice_map[expression].speed
+        elif char_config:
+            final_speed = char_config.default_speed
+        else:
+            final_speed = speed if speed is not None else 1.0
+
+        if char_config and expression in char_config.expression_voice_map:
+            final_pitch = char_config.expression_voice_map[expression].pitch
+        elif char_config:
+            final_pitch = char_config.default_pitch
+        else:
+            final_pitch = pitch if pitch is not None else 0.0
+
+        if char_config and expression in char_config.expression_voice_map:
+            final_intonation = char_config.expression_voice_map[expression].intonation
+        elif char_config:
+            final_intonation = char_config.default_intonation
+        else:
+            final_intonation = intonation if intonation is not None else 1.0
+
+        audio_filename = f"conv_{i:03d}_{speaker}.wav"
+        audio_path = os.path.join(output_dir, audio_filename)
+
+        return (i, text, final_speed, final_pitch, final_intonation, audio_path, speaker)
+
+    def _generate_voice_worker(
+        self, task: Tuple[int, str, float, float, float, str, str]
+    ) -> Tuple[int, Optional[str]]:
+        """並列実行用の音声生成ワーカー"""
+        i, text, speed, pitch, intonation, audio_path, speaker = task
+        generated_path = self.generate_voice(
+            text=text,
+            speed=speed,
+            pitch=pitch,
+            intonation=intonation,
+            output_path=audio_path,
+            speaker=speaker,
+        )
+        return (i, generated_path)
+
     def generate_conversation_voices(
         self,
         conversations: List[Dict],
@@ -132,7 +194,7 @@ class VoiceGenerator:
         intonation: float = None,
         output_dir: str = None,
     ) -> List[str]:
-        """Generate voice files for conversation in sequence
+        """Generate voice files for conversation in parallel
 
         Args:
             conversations: List of conversation items with keys: 'speaker', 'text'
@@ -147,72 +209,43 @@ class VoiceGenerator:
 
         os.makedirs(output_dir, exist_ok=True)
 
-        audio_paths = []
-
-        # 会話順序に従って各セリフの音声を生成
+        # タスクを準備
+        tasks = []
         for i, conv in enumerate(conversations):
-            speaker = conv.get("speaker", "zundamon")
-            # VOICEVOX用のひらがなテキストを優先、なければ通常のテキストを使用
-            text = conv.get("text_for_voicevox", conv.get("text", "")).strip()
+            task = self._prepare_voice_task(i, conv, speed, pitch, intonation, output_dir)
+            if task is not None:
+                tasks.append(task)
 
-            if not text:
-                continue
+        if not tasks:
+            return []
 
-            # キャラクター設定を取得
-            characters = Characters.get_all()
-            char_config = characters.get(speaker)
+        # 並列で音声生成
+        results: Dict[int, Optional[str]] = {}
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {
+                executor.submit(self._generate_voice_worker, task): task[0]
+                for task in tasks
+            }
+            for future in as_completed(futures):
+                idx = futures[future]
+                try:
+                    i, generated_path = future.result()
+                    results[i] = generated_path
+                    if generated_path:
+                        logger.info(f"Generated conversation voice {i}: {generated_path}")
+                    else:
+                        logger.warning(f"Failed to generate voice for conversation {i}")
+                except Exception as e:
+                    logger.error(f"Voice generation task {idx} raised exception: {e}")
+                    results[idx] = None
 
-            # 表情を取得（デフォルトはnormal）
-            expression = conv.get("expression", "normal")
-
-            # 音声パラメータを決定（優先順位: 表情ベース > キャラデフォルト > グローバル）
-            # Speed
-            if char_config and expression in char_config.expression_voice_map:
-                final_speed = char_config.expression_voice_map[expression].speed
-            elif char_config:
-                final_speed = char_config.default_speed
-            else:
-                final_speed = speed if speed is not None else 1.0
-
-            # Pitch
-            if char_config and expression in char_config.expression_voice_map:
-                final_pitch = char_config.expression_voice_map[expression].pitch
-            elif char_config:
-                final_pitch = char_config.default_pitch
-            else:
-                final_pitch = pitch if pitch is not None else 0.0
-
-            # Intonation
-            if char_config and expression in char_config.expression_voice_map:
-                final_intonation = char_config.expression_voice_map[expression].intonation
-            elif char_config:
-                final_intonation = char_config.default_intonation
-            else:
-                final_intonation = intonation if intonation is not None else 1.0
-
-            # 出力ファイル名（会話順序を含む）
-            audio_filename = f"conv_{i:03d}_{speaker}.wav"
-            audio_path = os.path.join(output_dir, audio_filename)
-
-            # 音声生成
-            generated_path = self.generate_voice(
-                text=text,
-                speed=final_speed,
-                pitch=final_pitch,
-                intonation=final_intonation,
-                output_path=audio_path,
-                speaker=speaker,
-            )
-
-            if generated_path:
-                audio_paths.append(generated_path)
-                logger.info(
-                    f"Generated conversation voice {i}: {speaker} - {generated_path}"
-                )
-            else:
-                logger.warning(
-                    f"Failed to generate voice for conversation {i}: {speaker}"
-                )
+        # 元の順序で結果を組み立て
+        audio_paths = []
+        for task in tasks:
+            i = task[0]
+            path = results.get(i)
+            if path:
+                audio_paths.append(path)
 
         return audio_paths
 
