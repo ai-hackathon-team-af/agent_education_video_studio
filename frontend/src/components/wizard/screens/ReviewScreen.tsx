@@ -346,9 +346,9 @@ const ReviewScreen = () => {
                           }
                           className="text-xs px-2 py-1 border border-slate-200 rounded-md bg-white focus:ring-1 focus:ring-blue-400 outline-none"
                         >
-                          <option value="ずんだもん">ずんだもん</option>
-                          <option value="めたん">めたん</option>
-                          <option value="つむぎ">つむぎ</option>
+                          <option value="zundamon">ずんだもん</option>
+                          <option value="metan">めたん</option>
+                          <option value="tsumugi">つむぎ</option>
                         </select>
                         <select
                           value={segment.expression}
@@ -400,8 +400,8 @@ const ReviewScreen = () => {
                     <div key={segmentIndex} className="mb-4">
                       <div className="flex gap-4">
                         <div className="w-16 text-slate-400 text-xs font-mono pt-1 flex-shrink-0">
-                          {segment.speaker === "ずんだもん" ? "🟢" : "🔵"}{" "}
-                          {segment.speaker}
+                          {segment.speaker === "zundamon" ? "🟢" : "🔵"}{" "}
+                          {({ zundamon: "ずんだもん", metan: "めたん", tsumugi: "つむぎ", narrator: "ナレーター" } as Record<string, string>)[segment.speaker] || segment.speaker}
                         </div>
                         <div className="flex-1">
                           <p className="text-slate-800">{segment.text}</p>
