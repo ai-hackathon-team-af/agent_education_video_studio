@@ -120,7 +120,7 @@ export const useWizardStore = create<WizardState & WizardActions>((set, get) => 
             const newSpeaker = updates.speaker;
             const expression = updated.expression || "normal";
             // visible_charactersに新しい話者を含める（デュオ: 話者 + もう1人）
-            const otherChar = newSpeaker === "ずんだもん" ? "めたん" : "ずんだもん";
+            const otherChar = newSpeaker === "zundamon" ? "metan" : "zundamon";
             updated.visible_characters = [newSpeaker, otherChar];
             // character_expressionsを更新
             updated.character_expressions = {
@@ -154,12 +154,12 @@ export const useWizardStore = create<WizardState & WizardActions>((set, get) => 
     if (!generatedScript) return;
 
     const newSegment: import("@/types").ConversationSegment = {
-      speaker: "ずんだもん",
+      speaker: "zundamon",
       text: "",
       text_for_voicevox: "",
       expression: "normal",
-      visible_characters: ["ずんだもん", "めたん"],
-      character_expressions: { ずんだもん: "normal", めたん: "normal" },
+      visible_characters: ["zundamon", "metan"],
+      character_expressions: { zundamon: "normal", metan: "normal" },
     };
 
     const newSections = generatedScript.sections.map((section, si) => {
