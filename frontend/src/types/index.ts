@@ -46,6 +46,7 @@ export interface VideoStatusResponse {
     video_path?: string;
     status?: string;
     message?: string;
+    ai_optimizations?: Array<{ type: string; title: string; description: string }>;
   };
   error?: string;
 }
