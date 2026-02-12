@@ -16,9 +16,60 @@ import {
 } from "lucide-react";
 import { useWizardStore } from "@/stores/wizardStore";
 import { scriptApi } from "@/api/scripts";
+import type { ComedyScript } from "@/types";
 
 // Assets are served from the same origin, so use relative URLs
 const ASSETS_BASE_URL = "";
+
+const SPEAKER_NAME_MAP: Record<string, string> = {
+  zundamon: "ずんだもん",
+  metan: "めたん",
+  tsumugi: "つむぎ",
+  narrator: "ナレーター",
+};
+
+const ScriptAnalysisNote = ({ generatedScript }: { generatedScript: ComedyScript | null }) => {
+  if (!generatedScript) return null;
+
+  const sections = generatedScript.sections || [];
+  const allSegments = generatedScript.all_segments || [];
+  if (sections.length === 0 && allSegments.length === 0) return null;
+
+  const speakerCounts: Record<string, number> = {};
+  const expressionSet = new Set<string>();
+  for (const seg of allSegments) {
+    speakerCounts[seg.speaker] = (speakerCounts[seg.speaker] || 0) + 1;
+    if (seg.expression && seg.expression !== "normal") expressionSet.add(seg.expression);
+  }
+  const total = allSegments.length || 1;
+  const speakerSummary = Object.entries(speakerCounts)
+    .sort(([, a], [, b]) => b - a)
+    .map(([sp, count]) => `${SPEAKER_NAME_MAP[sp] || sp} ${Math.round((count / total) * 100)}%`)
+    .join("、");
+  const points = [
+    `${sections.length}つのセクション（${sections.map((s) => s.section_name).join("→")}）で段階的に解説`,
+    `キャラクター配分: ${speakerSummary}`,
+    expressionSet.size > 0
+      ? `${expressionSet.size}種類の表情（${[...expressionSet].slice(0, 3).join("、")}${expressionSet.size > 3 ? "等" : ""}）で感情豊かに表現`
+      : null,
+  ].filter(Boolean);
+
+  return (
+    <div className="mt-6 bg-amber-50 border border-amber-200 p-4 rounded-2xl flex gap-3">
+      <div className="bg-amber-400 p-1.5 rounded-full h-fit mt-0.5">
+        <Lightbulb size={16} className="text-white" />
+      </div>
+      <div>
+        <p className="text-sm font-bold text-amber-800 mb-1">AIの生成ポイント</p>
+        <ul className="text-sm text-amber-700 leading-relaxed space-y-1">
+          {points.map((p, i) => (
+            <li key={i}>・{p}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
 
 const ReviewScreen = () => {
   const {
@@ -420,48 +471,7 @@ const ReviewScreen = () => {
           </div>
 
           {/* AI Note - 台本データから動的生成 */}
-          {generatedScript && (() => {
-            const sections = generatedScript.sections || [];
-            const allSegments = generatedScript.all_segments || [];
-            const speakerCounts: Record<string, number> = {};
-            const expressionSet = new Set<string>();
-            const speakerNameMap: Record<string, string> = {
-              zundamon: "ずんだもん", metan: "めたん", tsumugi: "つむぎ", narrator: "ナレーター",
-            };
-            for (const seg of allSegments) {
-              speakerCounts[seg.speaker] = (speakerCounts[seg.speaker] || 0) + 1;
-              if (seg.expression && seg.expression !== "normal") expressionSet.add(seg.expression);
-            }
-            const total = allSegments.length || 1;
-            const speakerSummary = Object.entries(speakerCounts)
-              .sort(([, a], [, b]) => b - a)
-              .map(([sp, count]) => `${speakerNameMap[sp] || sp} ${Math.round((count / total) * 100)}%`)
-              .join("、");
-            const points = [
-              `${sections.length}つのセクション（${sections.map(s => s.section_name).join("→")}）で段階的に解説`,
-              `キャラクター配分: ${speakerSummary}`,
-              expressionSet.size > 0
-                ? `${expressionSet.size}種類の表情（${[...expressionSet].slice(0, 3).join("、")}${expressionSet.size > 3 ? "等" : ""}）で感情豊かに表現`
-                : null,
-            ].filter(Boolean);
-            return (
-              <div className="mt-6 bg-amber-50 border border-amber-200 p-4 rounded-2xl flex gap-3">
-                <div className="bg-amber-400 p-1.5 rounded-full h-fit mt-0.5">
-                  <Lightbulb size={16} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-amber-800 mb-1">
-                    AIの生成ポイント
-                  </p>
-                  <ul className="text-sm text-amber-700 leading-relaxed space-y-1">
-                    {points.map((p, i) => (
-                      <li key={i}>・{p}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            );
-          })()}
+          <ScriptAnalysisNote generatedScript={generatedScript} />
         </div>
       </div>
     </div>
