@@ -119,10 +119,8 @@ const ResultScreen = () => {
                       key={index}
                       className="bg-white/60 backdrop-blur-sm p-5 rounded-2xl border border-white"
                     >
-                      <p className="text-xs font-bold text-amber-600 mb-2 uppercase tracking-widest">
-                        {opt.type === "understanding_hook"
-                          ? "理解のフック"
-                          : "視覚演出"}
+                      <p className="text-xs font-bold text-amber-600 mb-2 tracking-widest">
+                        {opt.type}
                       </p>
                       <p className="text-lg font-bold text-amber-950 leading-tight">
                         {opt.title}
