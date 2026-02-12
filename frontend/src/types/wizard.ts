@@ -18,7 +18,7 @@ export interface LoadingLog {
 
 // AIの最適化ポイント（ResultScreen用）
 export interface AIOptimization {
-  type: "understanding_hook" | "visual_effect";
+  type: string;
   title: string;
   description: string;
 }

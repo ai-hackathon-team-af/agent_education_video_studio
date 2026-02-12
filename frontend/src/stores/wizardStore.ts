@@ -304,19 +304,10 @@ export const useWizardStore = create<WizardState & WizardActions>((set, get) => 
             setVideoPath(status.result.video_path);
           }
 
-          // AIの最適化ポイントをダミーで設定（実際はAPIから取得）
-          setAiOptimizations([
-            {
-              type: "understanding_hook",
-              title: "専門用語の平易化",
-              description: "難しい用語を日常的な言葉で言い換えて理解を促進します。",
-            },
-            {
-              type: "visual_effect",
-              title: "身近な例での図解",
-              description: "日常生活の例を使って視覚的に説明します。",
-            },
-          ]);
+          // AIの最適化ポイントをAPIレスポンスから取得
+          if (status.result?.ai_optimizations && status.result.ai_optimizations.length > 0) {
+            setAiOptimizations(status.result.ai_optimizations);
+          }
 
           set({ isProcessing: false });
           setStep(4);
