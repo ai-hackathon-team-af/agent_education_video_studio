@@ -14,5 +14,4 @@ __all__ = [
     "ComedyTitle",
     "ComedyOutline",
     "ComedyScript",
-    "YouTubeMetadata",
 ]

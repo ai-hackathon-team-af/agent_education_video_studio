@@ -114,34 +114,6 @@ class ComedyTitle(BaseTitleModel):
         return cleaned
 
 
-class YouTubeMetadata(BaseModel):
-    """YouTubeメタデータ"""
-
-    tags: List[str] = Field(description="YouTubeタグ（最大15個）")
-    description: str = Field(description="YouTube説明文（5000文字以内）")
-
-    @field_validator("tags")
-    @classmethod
-    def validate_tags(cls, v: List[str]) -> List[str]:
-        if not v:
-            raise ValueError("タグリストは空にできません")
-        if len(v) > 15:
-            raise ValueError("タグは最大15個までです")
-        cleaned = [tag.strip() for tag in v if tag and tag.strip()]
-        if not cleaned:
-            raise ValueError("有効なタグがありません")
-        return cleaned
-
-    @field_validator("description")
-    @classmethod
-    def validate_description_length(cls, v: str) -> str:
-        if not v or not v.strip():
-            raise ValueError("説明文は空にできません")
-        cleaned = v.strip()
-        if len(cleaned) > 5000:
-            raise ValueError("説明文は5000文字以内である必要があります")
-        return cleaned
-
 
 class ComedyOutline(BaseOutlineModel):
     theme: str = Field(description="漫談のテーマ")
@@ -151,10 +123,6 @@ class ComedyOutline(BaseOutlineModel):
     sections: List[SectionDefinition] = Field(
         description="動的に生成されたセクション定義リスト"
     )
-    youtube_metadata: Optional[YouTubeMetadata] = Field(
-        default=None, description="YouTubeメタデータ（ディスクリプションとタグ）"
-    )
-
     @field_validator("theme", "story_summary", "ending_type")
     @classmethod
     def validate_string_not_empty(cls, v: str) -> str:
@@ -182,10 +150,6 @@ class ComedyScript(BaseScriptModel):
         description="全会話セグメントの統合リスト"
     )
     ending_type: str = Field(description="強制終了のタイプ")
-    youtube_metadata: Optional[YouTubeMetadata] = Field(
-        default=None, description="YouTubeメタデータ（ディスクリプションとタグ）"
-    )
-
     @field_validator("theme", "ending_type")
     @classmethod
     def validate_string_not_empty(cls, v: str) -> str:
