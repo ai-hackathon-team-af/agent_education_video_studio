@@ -19,7 +19,6 @@ AI を活用して教育用キャラクター解説動画を自動生成する W
 - **Google Gemini (gemini-3-flash-preview)** - 台本生成・背景画像生成の中核 AI モデル
 - **Google Cloud (GCE)** - 本番環境のホスティング
 - **LangChain** - LLM オーケストレーション
-- **Tavily** - Web 検索による情報収集
 
 ### Frontend
 
