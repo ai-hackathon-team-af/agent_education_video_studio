@@ -5,11 +5,13 @@ React + FastAPI で完全リニューアルされた、ずんだもん動画生�
 ## 🎯 主な機能
 
 - 🎬 **会話動画生成**: ずんだもんとゲストキャラクターの会話動画を自動生成
-- 📚 **AI 台本生成**: 食べ物をテーマにした解説動画の台本を自動生成
+- 📚 **AI 台本生成**: お笑い（コメディ）テーマの解説動画の台本を自動生成
 - 🎙️ **音声合成**: VOICEVOX による高品質な音声生成
 - 🖼️ **画像処理**: 口パクアニメーションと背景合成
 - 🎵 **BGM ミキシング**: セクションごとの BGM 自動配置
-- ⚙️ **管理機能**: 背景・アイテム・食べ物データの管理
+- 📄 **PDF/Word 対応**: PDF・Word ファイルからのテキスト抽出
+- 🎨 **背景 AI 生成**: テーマに合わせた背景画像の自動生成
+- ⚙️ **管理機能**: 背景・アイテムデータの管理
 
 ## 🏗️ 技術スタック
 
@@ -36,6 +38,8 @@ React + FastAPI で完全リニューアルされた、ずんだもん動画生�
 - **OpenCV** - 画像処理
 - **MoviePy** - 動画生成
 - **LangChain** - LLM 統合
+- **Google GenAI (Gemini)** - AI モデル
+- **Tavily** - Web 検索統合
 - **Supabase** - データベース
 
 ## 📦 セットアップ
@@ -54,7 +58,7 @@ cd zundan_studio
 
 # 環境変数ファイルを作成
 cp .env.example .env
-# .envファイルを編集して必要な環境変数を設定
+# .envファイルを編集（GOOGLE_API_KEY は必須）
 
 # Docker Composeで全サービスを起動
 docker-compose up --build
@@ -69,28 +73,14 @@ docker-compose up --build
 
 ## 🚀 使用方法
 
-### 1. 会話動画生成
+### ウィザード形式の動画生成フロー
 
-1. ホームページ（http://localhost:3000）にアクセス
-2. 話者を選択してセリフを入力
-3. 「セリフを追加」で会話リストに追加
-4. 「会話動画を生成」をクリック
-5. WebSocket でリアルタイム進捗を確認
-6. 完成した動画をダウンロード
+アプリは4ステップのウィザード形式で動作します：
 
-### 2. AI 台本生成
-
-1. 台本生成ページ（http://localhost:3000/scripts）にアクセス
-2. 食べ物名を入力（例: チョコレート）
-3. 「アウトラインを生成」をクリック
-4. 生成されたアウトラインを確認
-5. 「このアウトラインで動画を生成」をクリック
-6. 完成した台本を JSON でダウンロード
-
-### 3. データ管理
-
-1. 管理ページ（http://localhost:3000/management）にアクセス
-2. 背景画像・アイテム画像・食べ物データを管理
+1. **入力画面**: テーマの入力、AI モデルの選択、PDF/Word ファイルからのテキスト抽出（オプション）
+2. **レビュー画面**: AI が生成したタイトル・アウトライン・台本を確認・編集
+3. **ローディング画面**: 動画生成の進捗を WebSocket でリアルタイム確認
+4. **結果画面**: 完成した動画のプレビューとダウンロード
 
 ## 📂 プロジェクト構造
 
@@ -99,11 +89,19 @@ zundan_studio/
 ├── backend/                 # FastAPI バックエンド
 │   ├── app/
 │   │   ├── api/            # APIエンドポイント
+│   │   │   ├── scripts/   # 台本生成API
+│   │   │   ├── videos/    # 動画生成API
+│   │   │   ├── upload/    # ファイルアップロードAPI
+│   │   │   └── management.py
 │   │   ├── core/           # コアロジック
+│   │   │   ├── script_generators/  # 台本生成（comedy等）
+│   │   │   ├── asset_generators/   # 背景・音声生成
+│   │   │   └── processors/         # 音声・動画処理
 │   │   ├── services/       # ビジネスロジック
 │   │   ├── models/         # データモデル
+│   │   ├── prompts/        # LLMプロンプト
 │   │   ├── tasks/          # Celeryタスク
-│   │   ├── config/         # 設定
+│   │   ├── config/         # 設定・キャラクター・BGM
 │   │   └── main.py         # エントリーポイント
 │   ├── Dockerfile
 │   └── requirements.txt
@@ -111,15 +109,19 @@ zundan_studio/
 │   ├── src/
 │   │   ├── pages/          # ページコンポーネント
 │   │   ├── components/     # UIコンポーネント
+│   │   │   └── wizard/    # ウィザードフロー
 │   │   ├── stores/         # Zustand状態管理
+│   │   ├── hooks/          # カスタムフック
 │   │   ├── api/            # APIクライアント
 │   │   ├── types/          # TypeScript型定義
 │   │   └── App.tsx
 │   ├── Dockerfile
 │   └── package.json
+├── deploy/                  # GCEデプロイスクリプト
 ├── assets/                  # 画像・音声アセット
 ├── outputs/                 # 生成動画出力
-├── docker-compose.yml       # Docker Compose設定
+├── docker-compose.yml       # Docker Compose設定（開発用）
+├── docker-compose.prod.yml  # Docker Compose設定（本番用）
 └── README.md
 ```
 
@@ -158,19 +160,16 @@ AIモデルの設定は `backend/app/config/models.py` で一元管理されて�
 # 利用可能なAIモデルの設定
 AVAILABLE_MODELS: List[Dict[str, Any]] = [
     {
-        "id": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-        "name": "Claude Sonnet 4.5",
-        "provider": "bedrock",
-        "temperature_range": (0.0, 1.0),
-        "default_temperature": 1.0,
-        "max_tokens": 64000,
+        "id": "gemini-3-flash-preview",
+        "name": "Gemini 3 Flash",
+        "provider": "google",
         "recommended": True,
     },
-    # ... 他のモデル
+    # ... 他のモデル (Gemini 1.5 Pro, Gemini 1.5 Flash)
 ]
 
 # デフォルトモデル設定
-DEFAULT_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+DEFAULT_MODEL_ID = "gemini-3-flash-preview"
 ```
 
 **特徴:**
@@ -183,7 +182,7 @@ DEFAULT_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 生成モードのデフォルト設定は `frontend/src/stores/scriptStore.ts` で管理されています。
 
 ```typescript
-mode: "comedy",  // デフォルトモード: "comedy" (お笑い) または "food" (食べ物)
+mode: "comedy",  // デフォルトモード: "comedy" (お笑い)
 ```
 
 ## 🐛 トラブルシューティング
@@ -210,7 +209,8 @@ docker-compose logs celery-worker
 
 ### フロントエンドがバックエンドに接続できない
 
-- 環境変数`VITE_API_URL`と`VITE_WS_URL`が正しく設定されているか確認
+- 環境変数 `VITE_API_URL` と `VITE_WS_URL` が正しく設定されているか確認
+- `GOOGLE_API_KEY` が `.env` に設定されているか確認
 - バックエンドが起動しているか確認（http://localhost:8000/health）
 
 ## 📝 API ドキュメント
