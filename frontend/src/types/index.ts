@@ -101,7 +101,6 @@ export interface ComedyOutline {
   character_moods: CharacterMood;
   ending_type: string;
   sections: SectionDefinition[];
-  youtube_metadata?: YouTubeMetadata;
 }
 
 export interface ComedyScript {
@@ -113,7 +112,6 @@ export interface ComedyScript {
   sections: VideoSection[];
   all_segments: ConversationSegment[];
   ending_type: string;
-  youtube_metadata?: YouTubeMetadata;
 }
 
 export interface ConversationSegment {
@@ -189,14 +187,8 @@ export interface UnifiedOutlineRequest {
   temperature?: number;
 }
 
-export interface YouTubeMetadata {
-  tags: string[];
-  description: string;
-}
-
 export interface UnifiedOutlineResponse {
   outline: ComedyOutline;
-  youtube_metadata?: YouTubeMetadata;
   model: string;
   temperature: number;
 }
@@ -232,7 +224,6 @@ export interface JsonScriptData {
   theme?: string;
   character_moods?: CharacterMood;
   sections: VideoSection[];
-  youtube_metadata?: YouTubeMetadata;
   is_generated?: boolean;
 }
 

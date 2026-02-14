@@ -4,7 +4,6 @@ import type {
   ComedyTitle,
   ComedyOutline,
   ComedyScript,
-  YouTubeMetadata,
 } from "@/types";
 
 // ステップ定義
@@ -40,7 +39,6 @@ interface ScriptState {
   generatedTitle: ComedyTitle | null;
   generatedOutline: ComedyOutline | null;
   generatedScript: ComedyScript | null;
-  youtubeMetadata: YouTubeMetadata | null;
 
   // === 参照情報（後方互換性のため保持） ===
   referenceInfo: string;
@@ -66,7 +64,6 @@ interface ScriptState {
   setGeneratedTitle: (title: ComedyTitle | null) => void;
   setGeneratedOutline: (outline: ComedyOutline | null) => void;
   setGeneratedScript: (script: ComedyScript | null) => void;
-  setYoutubeMetadata: (metadata: YouTubeMetadata | null) => void;
 
   setReferenceInfo: (info: string) => void;
   setSearchResults: (results: Record<string, any>) => void;
@@ -97,7 +94,6 @@ export const useScriptStore = create<ScriptState>((set) => ({
   generatedTitle: null,
   generatedOutline: null,
   generatedScript: null,
-  youtubeMetadata: null,
 
   referenceInfo: "",
   searchResults: {},
@@ -130,8 +126,6 @@ export const useScriptStore = create<ScriptState>((set) => ({
 
   setGeneratedScript: (script) => set({ generatedScript: script }),
 
-  setYoutubeMetadata: (metadata) => set({ youtubeMetadata: metadata }),
-
   setReferenceInfo: (info) => set({ referenceInfo: info }),
 
   setSearchResults: (results) => set({ searchResults: results }),
@@ -151,7 +145,6 @@ export const useScriptStore = create<ScriptState>((set) => ({
       generatedTitle: null,
       generatedOutline: null,
       generatedScript: null,
-      youtubeMetadata: null,
       referenceInfo: "",
       searchResults: {},
       isGenerating: false,
@@ -166,7 +159,6 @@ export const useScriptStore = create<ScriptState>((set) => ({
       generatedTitle: null,
       generatedOutline: null,
       generatedScript: null,
-      youtubeMetadata: null,
       isGenerating: false,
       progress: 0,
       statusMessage: "",

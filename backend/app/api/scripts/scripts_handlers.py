@@ -59,7 +59,7 @@ async def handle_generate_outline(request: OutlineRequest) -> OutlineResponse:
 
         generator = UnifiedScriptGenerator(ScriptMode.COMEDY)
 
-        outline, youtube_metadata, model_info = generator.generate_outline(
+        outline, model_info = generator.generate_outline(
             title_data=request.title_data,
             reference_info=request.reference_info or "",
             model=request.model,
@@ -68,7 +68,6 @@ async def handle_generate_outline(request: OutlineRequest) -> OutlineResponse:
 
         return OutlineResponse(
             outline=outline,
-            youtube_metadata=youtube_metadata,
             model=model_info["model"],
             temperature=model_info["temperature"],
         )
@@ -118,7 +117,7 @@ async def handle_generate_full_script(request: FullScriptRequest) -> FullScriptR
         )
 
         # 2. アウトライン生成
-        outline, youtube_metadata, _ = generator.generate_outline(
+        outline, _ = generator.generate_outline(
             title_data=title,
             reference_info=reference_info,
             model=request.model,

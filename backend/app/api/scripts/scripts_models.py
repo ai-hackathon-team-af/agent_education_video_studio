@@ -9,7 +9,6 @@ from app.models.script_models import (
     ComedyTitleBatch,
     ComedyOutline,
     ComedyScript,
-    YouTubeMetadata,
     ThemeBatch,
 )
 
@@ -47,9 +46,6 @@ class OutlineResponse(BaseModel):
     """アウトライン生成レスポンス"""
 
     outline: ComedyOutline
-    youtube_metadata: Optional[YouTubeMetadata] = Field(
-        default=None, description="YouTubeメタデータ（生成失敗時はNone）"
-    )
     model: str
     temperature: float
 

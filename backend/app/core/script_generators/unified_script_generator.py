@@ -5,7 +5,6 @@ from app.models.script_models import (
     ComedyTitle,
     ComedyOutline,
     ComedyScript,
-    YouTubeMetadata,
 )
 from app.core.script_generators.comedy import ComedyScriptGenerator
 from app.utils.llm_factory import create_llm_from_model_config
@@ -90,7 +89,7 @@ class UnifiedScriptGenerator:
         model: Optional[str] = None,
         temperature: Optional[float] = None,
         progress_callback: Optional[Callable[[str], None]] = None,
-    ) -> Tuple[ComedyOutline, Optional[YouTubeMetadata], Dict[str, Any]]:
+    ) -> Tuple[ComedyOutline, Dict[str, Any]]:
         """アウトライン生成
 
         Args:
@@ -101,7 +100,7 @@ class UnifiedScriptGenerator:
             progress_callback: 進捗通知用コールバック関数
 
         Returns:
-            Tuple[アウトライン, YouTubeメタデータ, モデル設定]
+            Tuple[アウトライン, モデル設定]
         """
 
         try:
@@ -122,14 +121,13 @@ class UnifiedScriptGenerator:
 
             llm = create_llm_from_model_config(model_config, temperature)
 
-            # アウトライン生成（メタデータも同時生成）
-            outline, youtube_metadata = self.generator.generate_outline(
+            # アウトライン生成
+            outline = self.generator.generate_outline(
                 title_data, llm, progress_callback
             )
 
             return (
                 outline,
-                youtube_metadata,
                 {
                     "model": model,
                     "temperature": temperature,

@@ -23,7 +23,6 @@ const ScriptGenerationPage = () => {
     generatedTitle,
     generatedOutline,
     generatedScript,
-    youtubeMetadata,
     isGenerating,
     progress,
     statusMessage,
@@ -132,7 +131,6 @@ const ScriptGenerationPage = () => {
       {currentStep === "outline" && generatedOutline && (
         <OutlineSection
           outline={generatedOutline}
-          youtubeMetadata={youtubeMetadata}
           isGenerating={isGenerating}
           isApprovingLoading={isGenerating && generatingAction === "approve"}
           isRegeneratingLoading={
